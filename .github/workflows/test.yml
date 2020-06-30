@@ -20,5 +20,5 @@ jobs:
     - uses: actions/checkout@v1
     - uses: ./
       with: 
-        #all: true
-        kbld: v0.23.0
+        only: kbld, ytt
+        kbld: v0.28.0

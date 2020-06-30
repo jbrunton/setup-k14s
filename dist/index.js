@@ -2182,10 +2182,10 @@ function getDownloadUrl(app) {
     return __awaiter(this, void 0, void 0, function* () {
         const assetName = getAssetName(app);
         const response = yield axios.get(`https://api.github.com/repos/k14s/${app.name}/releases`);
-        const defaultVersion = response.data[0].name;
-        const version = app.version || defaultVersion;
-        if (!app.version) {
-            console.log(`No version set for ${app.name}, defaulting to ${version}`);
+        const latestVersion = response.data[0].name;
+        const version = app.version == 'latest' ? latestVersion : app.version;
+        if (app.version == 'latest') {
+            console.log(`Using latest version for ${app.name} (${version})`);
         }
         for (const release of response.data) {
             if (release.name == version) {
@@ -2198,7 +2198,7 @@ function getDownloadUrl(app) {
                 throw new Error(`Could not find executable ${assetName} for ${app.name} ${version}`);
             }
         }
-        throw new Error(`Could not find version ${version} for ${app.name}`);
+        throw new Error(`Could not find version "${version}" for ${app.name}`);
     });
 }
 const k14sApps = [
@@ -2218,31 +2218,34 @@ function downloadApp(app) {
         core.addPath(cachedPath);
     });
 }
-function parseInputApps() {
-    if (core.getInput('all') == 'true') {
-        return k14sApps.map((appName) => ({ name: appName, version: undefined }));
+function parseApps() {
+    const onlyApps = core.getInput('only');
+    if (!onlyApps) {
+        return k14sApps;
     }
     const apps = [];
-    k14sApps.forEach((appName) => {
-        const appVersion = core.getInput(appName);
-        if (appVersion) {
-            const app = { name: appName, version: appVersion };
-            if (appVersion == 'true') {
-                app.version = undefined;
-            }
-            apps.push(app);
+    onlyApps.split(',').map((appName) => appName.trim()).forEach((appName) => {
+        if (!k14sApps.includes(appName)) {
+            throw Error(`Unknown app: ${appName}`);
         }
+        apps.push(appName);
     });
     if (apps.length == 0) {
         throw new Error(`No apps configured to download. Set "all: true" or see the docs for more options.`);
     }
     return apps;
 }
+function parseAppVersions() {
+    const apps = parseApps();
+    return apps.map((appName) => {
+        return { name: appName, version: core.getInput(appName) };
+    });
+}
 function downloadApps() {
     return __awaiter(this, void 0, void 0, function* () {
-        const apps = parseInputApps();
-        console.log('downloading apps: ' + apps.map((app) => `${app.name}:${app.version}`).join(', '));
-        yield Promise.all(apps.map((app) => downloadApp(app)));
+        const appVersions = parseAppVersions();
+        console.log('Installing apps: ' + appVersions.map((app) => `${app.name}:${app.version}`).join(', '));
+        yield Promise.all(appVersions.map((app) => downloadApp(app)));
     });
 }
 function run() {

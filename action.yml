@@ -2,18 +2,34 @@ name: 'setup-k14s'
 description: 'Install k14s apps'
 author: 'John Brunton'
 inputs:
-  all:
-    description: 'Whether to install all apps'
-    required: false
-    default: false
-  kbld:
-    description: 'Install kbld'
+  only:
+    description: "List apps to download if you don't need all"
     required: false
     default: null
   ytt:
     description: 'Install ytt'
     required: false
-    default: null
+    default: latest
+  kbld:
+    description: 'Install kbld'
+    required: false
+    default: latest
+  kapp:
+    description: 'Install kapp'
+    required: false
+    default: latest
+  kwt:
+    description: 'Install kwt'
+    required: false
+    default: latest
+  imgpkg:
+    description: 'Install imgpkg'
+    required: false
+    default: latest
+  vendir:
+    description: 'Install vendir'
+    required: false
+    default: latest
 runs:
   using: 'node12'
   main: 'dist/index.js'

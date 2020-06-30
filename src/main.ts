@@ -5,7 +5,7 @@ const fs = require('fs')
 
 interface AppVersion {
   name: string,
-  version: string | undefined
+  version: string
 }
 
 function getAssetSuffix() {
@@ -26,10 +26,10 @@ async function getDownloadUrl(app: AppVersion): Promise<[AppVersion, string]> {
   const assetName = getAssetName(app);
   const response = await axios.get(`https://api.github.com/repos/k14s/${app.name}/releases`);
 
-  const defaultVersion = response.data[0].name;
-  const version = app.version || defaultVersion;
-  if (!app.version) {
-    console.log(`No version set for ${app.name}, defaulting to ${version}`);
+  const latestVersion = response.data[0].name;
+  const version = app.version == 'latest' ? latestVersion : app.version;
+  if (app.version == 'latest') {
+    console.log(`Using latest version for ${app.name} (${version})`);
   }
 
   for (const release of response.data) {
@@ -43,7 +43,7 @@ async function getDownloadUrl(app: AppVersion): Promise<[AppVersion, string]> {
       throw new Error(`Could not find executable ${assetName} for ${app.name} ${version}`);
     }
   }
-  throw new Error(`Could not find version ${version} for ${app.name}`);
+  throw new Error(`Could not find version "${version}" for ${app.name}`);
 }
 
 const k14sApps = [
@@ -63,32 +63,35 @@ async function downloadApp(app: AppVersion): Promise<void> {
   core.addPath(cachedPath);
 }
 
-function parseInputApps(): AppVersion[] {
-  if (core.getInput('all') == 'true') {
-    return k14sApps.map((appName: string) => ({ name: appName, version: undefined }));
+function parseApps(): string[] {
+  const onlyApps = core.getInput('only')
+  if (!onlyApps) {
+    return k14sApps;
   }
-
-  const apps: AppVersion[] = [];
-  k14sApps.forEach((appName: string) => {
-    const appVersion = core.getInput(appName)
-    if (appVersion) {
-      const app = { name: appName, version: appVersion };
-      if (appVersion == 'true') {
-        app.version = undefined;
-      }
-      apps.push(app)
+  const apps: string[] = [];
+  onlyApps.split(',').map((appName: string) => appName.trim()).forEach((appName: string) => {
+    if (!k14sApps.includes(appName)) {
+      throw Error(`Unknown app: ${appName}`);
     }
-  })
+    apps.push(appName);
+  });
   if (apps.length == 0) {
     throw new Error(`No apps configured to download. Set "all: true" or see the docs for more options.`)
   }
   return apps;
 }
 
+function parseAppVersions(): AppVersion[] {
+  const apps = parseApps();
+  return apps.map((appName: string) => {
+    return { name: appName, version: core.getInput(appName) };
+  });
+}
+
 async function downloadApps() {
-  const apps = parseInputApps();
-  console.log('downloading apps: ' + apps.map((app: AppVersion) => `${app.name}:${app.version}`).join(', '));
-  await Promise.all(apps.map((app: AppVersion) => downloadApp(app)))
+  const appVersions = parseAppVersions();
+  console.log('Installing apps: ' + appVersions.map((app: AppVersion) => `${app.name}:${app.version}`).join(', '));
+  await Promise.all(appVersions.map((app: AppVersion) => downloadApp(app)))
 }
 
 async function run(): Promise<void> {
