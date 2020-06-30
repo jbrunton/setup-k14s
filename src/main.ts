@@ -30,14 +30,14 @@ async function getDownloadUrl(app: string, version?: string) {
     if (release.name == version) {
       for (const asset of release.assets) {
         if (asset.name == assetName) {
-          console.log(`Matching asset ${assetName} for ${app} ${version}`);
+          console.log(`Found executable ${assetName} for ${app} ${version}`);
           return {
             downloadUrl: asset.browser_download_url,
             downloadVersion: version
           };
         }
       }
-      throw new Error(`Could not find asset ${assetName} for ${app} ${version}`);
+      throw new Error(`Could not find executable ${assetName} for ${app} ${version}`);
     }
   }
   throw new Error(`Could not find version ${version} for ${app}`);
@@ -60,14 +60,17 @@ async function downloadApp(app: string) {
   core.addPath(cachedPath);
 }
 
-function parseInputApps() {
-  return core.getInput('only').split(',').map((s: string) => s.trim());
+function parseInputApps(): string[] | undefined {
+  const apps = core.getInput('only');
+  if (apps) {
+    return core.getInput('only').split(',').map((s: string) => s.trim());
+  }
 }
 
 async function downloadApps() {
-  //const apps = parseInputApps() || k14sApps;
-  console.log('downloading apps: ' + k14sApps.join(', '));
-  await Promise.all(k14sApps.map((app: string) => downloadApp(app)))
+  const apps = parseInputApps() || k14sApps;
+  console.log('downloading apps: ' + apps.join(', '));
+  await Promise.all(apps.map((app: string) => downloadApp(app)))
 }
 
 async function run(): Promise<void> {

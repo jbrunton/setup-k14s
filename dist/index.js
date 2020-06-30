@@ -2221,13 +2221,16 @@ function downloadApp(app) {
     });
 }
 function parseInputApps() {
-    return core.getInput('only').split(',').map((s) => s.trim());
+    const apps = core.getInput('only');
+    if (apps) {
+        return core.getInput('only').split(',').map((s) => s.trim());
+    }
 }
 function downloadApps() {
     return __awaiter(this, void 0, void 0, function* () {
-        //const apps = parseInputApps() || k14sApps;
-        console.log('downloading apps: ' + k14sApps.join(', '));
-        yield Promise.all(k14sApps.map((app) => downloadApp(app)));
+        const apps = parseInputApps() || k14sApps;
+        console.log('downloading apps: ' + apps.join(', '));
+        yield Promise.all(apps.map((app) => downloadApp(app)));
     });
 }
 function run() {
