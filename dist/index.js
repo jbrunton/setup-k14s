@@ -2176,31 +2176,29 @@ function getAssetSuffix() {
     }
 }
 function getAssetName(app) {
-    return `${app}-${getAssetSuffix()}`;
+    return `${app.name}-${getAssetSuffix()}`;
 }
-function getDownloadUrl(app, version) {
+function getDownloadUrl(app) {
     return __awaiter(this, void 0, void 0, function* () {
         const assetName = getAssetName(app);
-        const response = yield axios.get(`https://api.github.com/repos/k14s/${app}/releases`);
-        if (!version) {
-            version = response.data[0].name;
-            console.log(`No version set for ${app}, defaulting to ${version}`);
+        const response = yield axios.get(`https://api.github.com/repos/k14s/${app.name}/releases`);
+        const defaultVersion = response.data[0].name;
+        const version = app.version || defaultVersion;
+        if (!app.version) {
+            console.log(`No version set for ${app.name}, defaulting to ${version}`);
         }
         for (const release of response.data) {
             if (release.name == version) {
                 for (const asset of release.assets) {
                     if (asset.name == assetName) {
-                        console.log(`Matching asset ${assetName} for ${app} ${version}`);
-                        return {
-                            downloadUrl: asset.browser_download_url,
-                            downloadVersion: version
-                        };
+                        console.log(`Found executable ${assetName} for ${app.name} ${version}`);
+                        return [version, asset.browser_download_url];
                     }
                 }
-                throw new Error(`Could not find asset ${assetName} for ${app} ${version}`);
+                throw new Error(`Could not find executable ${assetName} for ${app.name} ${version}`);
             }
         }
-        throw new Error(`Could not find version ${version} for ${app}`);
+        throw new Error(`Could not find version ${version} for ${app.name}`);
     });
 }
 const k14sApps = [
@@ -2213,23 +2211,37 @@ const k14sApps = [
 ];
 function downloadApp(app) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { downloadUrl, downloadVersion } = yield getDownloadUrl(app, undefined);
-        const path = yield tc.downloadTool(downloadUrl);
+        const [version, url] = yield getDownloadUrl(app);
+        const path = yield tc.downloadTool(url);
         fs.chmodSync(path, "755");
-        const cachedPath = yield tc.cacheFile(path, app, app, downloadVersion);
+        const cachedPath = yield tc.cacheFile(path, app.name, app.name, version);
         core.addPath(cachedPath);
     });
 }
 function parseInputApps() {
-    const apps = core.getInput('only');
-    if (apps) {
-        return core.getInput('only').split(',').map((s) => s.trim());
+    if (core.getInput('all') == 'true') {
+        return k14sApps.map((appName) => ({ name: appName, version: undefined }));
     }
+    const apps = [];
+    k14sApps.forEach((appName) => {
+        const appVersion = core.getInput(appName);
+        if (appVersion) {
+            const app = { name: appName, version: appVersion };
+            if (appVersion == 'true') {
+                app.version = undefined;
+            }
+            apps.push(app);
+        }
+    });
+    if (apps.length == 0) {
+        throw new Error(`No apps configured to download. Set "all: true" or see the docs for more options.`);
+    }
+    return apps;
 }
 function downloadApps() {
     return __awaiter(this, void 0, void 0, function* () {
-        const apps = parseInputApps() || k14sApps;
-        console.log('downloading apps: ' + apps.join(', '));
+        const apps = parseInputApps();
+        console.log('downloading apps: ' + apps.map((app) => `${app.name}:${app.version}`).join(', '));
         yield Promise.all(apps.map((app) => downloadApp(app)));
     });
 }

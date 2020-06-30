@@ -3,6 +3,11 @@ const axios = require('axios').default;
 const tc = require('@actions/tool-cache');
 const fs = require('fs')
 
+interface AppVersion {
+  name: string,
+  version: string | undefined
+}
+
 function getAssetSuffix() {
   if (process.platform === 'win32') {
     return 'windows-amd64.exe';
@@ -13,34 +18,32 @@ function getAssetSuffix() {
   }
 }
 
-function getAssetName(app: string) {
-  return `${app}-${getAssetSuffix()}`;
+function getAssetName(app: AppVersion) {
+  return `${app.name}-${getAssetSuffix()}`;
 }
 
-async function getDownloadUrl(app: string, version?: string) {
+async function getDownloadUrl(app: AppVersion): Promise<[AppVersion, string]> {
   const assetName = getAssetName(app);
-  const response = await axios.get(`https://api.github.com/repos/k14s/${app}/releases`);
+  const response = await axios.get(`https://api.github.com/repos/k14s/${app.name}/releases`);
 
-  if (!version) {
-    version = response.data[0].name;
-    console.log(`No version set for ${app}, defaulting to ${version}`);
+  const defaultVersion = response.data[0].name;
+  const version = app.version || defaultVersion;
+  if (!app.version) {
+    console.log(`No version set for ${app.name}, defaulting to ${version}`);
   }
 
   for (const release of response.data) {
     if (release.name == version) {
       for (const asset of release.assets) {
         if (asset.name == assetName) {
-          console.log(`Found executable ${assetName} for ${app} ${version}`);
-          return {
-            downloadUrl: asset.browser_download_url,
-            downloadVersion: version
-          };
+          console.log(`Found executable ${assetName} for ${app.name} ${version}`);
+          return [version, asset.browser_download_url];
         }
       }
-      throw new Error(`Could not find executable ${assetName} for ${app} ${version}`);
+      throw new Error(`Could not find executable ${assetName} for ${app.name} ${version}`);
     }
   }
-  throw new Error(`Could not find version ${version} for ${app}`);
+  throw new Error(`Could not find version ${version} for ${app.name}`);
 }
 
 const k14sApps = [
@@ -52,25 +55,40 @@ const k14sApps = [
   'vendir'
 ]
 
-async function downloadApp(app: string) {
-  const { downloadUrl, downloadVersion } = await getDownloadUrl(app, undefined);
-  const path = await tc.downloadTool(downloadUrl);
+async function downloadApp(app: AppVersion): Promise<void> {
+  const [version, url] = await getDownloadUrl(app);
+  const path = await tc.downloadTool(url);
   fs.chmodSync(path, "755")
-  const cachedPath = await tc.cacheFile(path, app, app, downloadVersion);
+  const cachedPath = await tc.cacheFile(path, app.name, app.name, version);
   core.addPath(cachedPath);
 }
 
-function parseInputApps(): string[] | undefined {
-  const apps = core.getInput('only');
-  if (apps) {
-    return core.getInput('only').split(',').map((s: string) => s.trim());
+function parseInputApps(): AppVersion[] {
+  if (core.getInput('all') == 'true') {
+    return k14sApps.map((appName: string) => ({ name: appName, version: undefined }));
   }
+
+  const apps: AppVersion[] = [];
+  k14sApps.forEach((appName: string) => {
+    const appVersion = core.getInput(appName)
+    if (appVersion) {
+      const app = { name: appName, version: appVersion };
+      if (appVersion == 'true') {
+        app.version = undefined;
+      }
+      apps.push(app)
+    }
+  })
+  if (apps.length == 0) {
+    throw new Error(`No apps configured to download. Set "all: true" or see the docs for more options.`)
+  }
+  return apps;
 }
 
 async function downloadApps() {
-  const apps = parseInputApps() || k14sApps;
-  console.log('downloading apps: ' + apps.join(', '));
-  await Promise.all(apps.map((app: string) => downloadApp(app)))
+  const apps = parseInputApps();
+  console.log('downloading apps: ' + apps.map((app: AppVersion) => `${app.name}:${app.version}`).join(', '));
+  await Promise.all(apps.map((app: AppVersion) => downloadApp(app)))
 }
 
 async function run(): Promise<void> {

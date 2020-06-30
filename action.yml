@@ -2,8 +2,16 @@ name: 'setup-k14s'
 description: 'Install k14s apps'
 author: 'John Brunton'
 inputs:
-  only:
-    description: 'Which apps to download'
+  all:
+    description: 'Whether to install all apps'
+    required: false
+    default: false
+  kbld:
+    description: 'Install kbld'
+    required: false
+    default: null
+  ytt:
+    description: 'Install ytt'
     required: false
     default: null
 runs:
