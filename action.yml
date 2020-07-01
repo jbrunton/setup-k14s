@@ -2,6 +2,10 @@ name: 'setup-k14s'
 description: 'Install k14s apps'
 author: 'John Brunton'
 inputs:
+  token:
+    description: "Github token to use to avoid rate limits"
+    require: false
+    default: null
   only:
     description: "List apps to download if you don't need all"
     required: false

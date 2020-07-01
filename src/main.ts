@@ -1,5 +1,6 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
+const { GitHub } = require('@actions/github/lib/utils');
 const tc = require('@actions/tool-cache');
 const fs = require('fs')
 
@@ -36,7 +37,17 @@ const k14sApps = [
   'vendir'
 ]
 
-const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+function createOctokit() {
+  const token = core.getInput('token');
+  if (token) {
+    return github.getOctokit(token);
+  } else {
+    core.warning('No token set, you may experience rate limiting. Set "token: ${{ secrets.GITHUB_TOKEN }}" if you have problems.');
+    return new GitHub();
+  }
+}
+
+const octokit = createOctokit();
 
 function describe(app: AppInfo): string {
   return `${app.name} ${app.version}`;
@@ -60,8 +71,8 @@ function getAssetInfo(app: AppInfo): AssetInfo {
 async function getDownloadUrlForAsset(asset: AssetInfo, release: ReposListReleasesItem): Promise<DownloadInfo> {
   for (const candidate of release.assets) {
     if (candidate.name == asset.name) {
-      console.log(`Found executable ${asset.name} for ${describe(asset.app)}`);
-      return { version: asset.app.version, url: candidate.browser_download_url };
+      core.info(`Found executable ${asset.name} for ${describe(asset.app)}`);
+      return { version: release.name, url: candidate.browser_download_url };
     }
   }
   throw new Error(`Could not find executable ${asset.name} for ${describe(asset.app)}`);
@@ -74,7 +85,7 @@ async function getDownloadUrl(app: AppInfo): Promise<DownloadInfo> {
   if (app.version == 'latest') {
     const response = await octokit.repos.getLatestRelease(repo);
     const release: ReposGetLatestReleaseResponseData = response.data;
-    console.log(`Using latest version for ${app.name} (${release.name})`);
+    core.info(`Using latest version for ${app.name} (${release.name})`);
     return getDownloadUrlForAsset(asset, release);
   }
 
@@ -89,14 +100,22 @@ async function getDownloadUrl(app: AppInfo): Promise<DownloadInfo> {
   throw new Error(`Could not find version "${app.version}" for ${app.name}`);
 }
 
-async function downloadApp(app: AppInfo): Promise<void> {
+async function installApp(app: AppInfo): Promise<void> {
+  core.info(`Installing ${describe(app)}...`);
   const { version, url } = await getDownloadUrl(app);
 
-  const binPath = await tc.downloadTool(url);
-  fs.chmodSync(binPath, "755")
+  let binPath = tc.find(app.name, version);
   
-  const cachedPath = await tc.cacheFile(binPath, app.name, app.name, version);
-  core.addPath(cachedPath);
+  if (!binPath) {
+    core.info(`Cache miss for ${app} ${version}`);
+    const downloadPath = await tc.downloadTool(url);
+    fs.chmodSync(downloadPath, "755")  
+    binPath = await tc.cacheFile(downloadPath, app.name, app.name, version);
+  } else {
+    core.info(`Cache hit for ${app} ${version}`);
+  }
+
+  core.addPath(binPath);
 }
 
 function parseInput(): string[] {
@@ -124,8 +143,8 @@ function getAppsToDownload(): AppInfo[] {
 
 async function downloadApps() {
   const AppInfos = getAppsToDownload();
-  console.log('Installing apps: ' + AppInfos.map((app: AppInfo) => `${app.name}:${app.version}`).join(', '));
-  await Promise.all(AppInfos.map((app: AppInfo) => downloadApp(app)))
+  core.info('Installing apps: ' + AppInfos.map((app: AppInfo) => `${app.name}:${app.version}`).join(', '));
+  await Promise.all(AppInfos.map((app: AppInfo) => installApp(app)))
 }
 
 async function run(): Promise<void> {
