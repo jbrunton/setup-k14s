@@ -1,0 +1,16 @@
+name: cron-hourly
+
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '*/1 * * * *'
+
+jobs:
+
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: fetch
+        run: echo "run cron"
+
