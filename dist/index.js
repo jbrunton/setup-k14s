@@ -2851,6 +2851,9 @@ const github = __webpack_require__(469);
 const tc = __webpack_require__(533);
 const fs = __webpack_require__(747);
 const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+function describe(app) {
+    return `${app.name} ${app.version}`;
+}
 function getAssetSuffix() {
     if (process.platform === 'win32') {
         return 'windows-amd64.exe';
@@ -2862,12 +2865,24 @@ function getAssetSuffix() {
         return 'linux-amd64';
     }
 }
-function getAssetName(app) {
-    return `${app.name}-${getAssetSuffix()}`;
+function getAssetInfo(app) {
+    const name = `${app.name}-${getAssetSuffix()}`;
+    return { app, name };
+}
+function getDownloadUrlForAsset(asset, release) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (const candidate of release.assets) {
+            if (candidate.name == asset.name) {
+                console.log(`Found executable ${asset.name} for ${describe(asset.app)}`);
+                return { version: asset.app.version, url: candidate.browser_download_url };
+            }
+        }
+        throw new Error(`Could not find executable ${asset.name} for ${describe(asset.app)}`);
+    });
 }
 function getDownloadUrl(app) {
     return __awaiter(this, void 0, void 0, function* () {
-        const assetName = getAssetName(app);
+        const asset = getAssetInfo(app);
         const response = yield octokit.repos.listReleases({ owner: 'k14s', repo: app.name });
         const releases = response.data;
         const latestVersion = releases[0].name;
@@ -2877,13 +2892,7 @@ function getDownloadUrl(app) {
         }
         for (const release of releases) {
             if (release.name == version) {
-                for (const asset of release.assets) {
-                    if (asset.name == assetName) {
-                        console.log(`Found executable ${assetName} for ${app.name} ${version}`);
-                        return { version, url: asset.browser_download_url };
-                    }
-                }
-                throw new Error(`Could not find executable ${assetName} for ${app.name} ${version}`);
+                return getDownloadUrlForAsset(asset, release);
             }
         }
         throw new Error(`Could not find version "${version}" for ${app.name}`);
@@ -2927,9 +2936,9 @@ function getAppsToDownload() {
 }
 function downloadApps() {
     return __awaiter(this, void 0, void 0, function* () {
-        const appVersions = getAppsToDownload();
-        console.log('Installing apps: ' + appVersions.map((app) => `${app.name}:${app.version}`).join(', '));
-        yield Promise.all(appVersions.map((app) => downloadApp(app)));
+        const AppInfos = getAppsToDownload();
+        console.log('Installing apps: ' + AppInfos.map((app) => `${app.name}:${app.version}`).join(', '));
+        yield Promise.all(AppInfos.map((app) => downloadApp(app)));
     });
 }
 function run() {
