@@ -1,6 +1,9 @@
 name: 'setup-k14s'
 description: 'Install k14s apps'
 author: 'John Brunton'
+branding:
+  color: 'green'
+  icon: 'play'
 inputs:
   token:
     description: "Github token to use to avoid rate limits"
