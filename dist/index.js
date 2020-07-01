@@ -2848,6 +2848,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
+const { GitHub } = __webpack_require__(521);
 const tc = __webpack_require__(533);
 const fs = __webpack_require__(747);
 const k14sApps = [
@@ -2858,7 +2859,17 @@ const k14sApps = [
     'imgpkg',
     'vendir'
 ];
-const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+function createOctokit() {
+    const token = core.getInput('token');
+    if (token) {
+        return github.getOctokit(token);
+    }
+    else {
+        core.warning('No token set, you may experience rate limiting. Set "token: ${{ secrets.GITHUB_TOKEN }}" if you have problems.');
+        return new GitHub();
+    }
+}
+const octokit = createOctokit();
 function describe(app) {
     return `${app.name} ${app.version}`;
 }
@@ -2881,7 +2892,7 @@ function getDownloadUrlForAsset(asset, release) {
     return __awaiter(this, void 0, void 0, function* () {
         for (const candidate of release.assets) {
             if (candidate.name == asset.name) {
-                console.log(`Found executable ${asset.name} for ${describe(asset.app)}`);
+                core.info(`Found executable ${asset.name} for ${describe(asset.app)}`);
                 return { version: release.name, url: candidate.browser_download_url };
             }
         }
@@ -2895,7 +2906,7 @@ function getDownloadUrl(app) {
         if (app.version == 'latest') {
             const response = yield octokit.repos.getLatestRelease(repo);
             const release = response.data;
-            console.log(`Using latest version for ${app.name} (${release.name})`);
+            core.info(`Using latest version for ${app.name} (${release.name})`);
             return getDownloadUrlForAsset(asset, release);
         }
         const response = yield octokit.repos.listReleases({ owner: 'k14s', repo: app.name });
@@ -2910,17 +2921,17 @@ function getDownloadUrl(app) {
 }
 function installApp(app) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('installing ' + describe(app));
+        core.info(`Installing ${describe(app)}...`);
         const { version, url } = yield getDownloadUrl(app);
         let binPath = tc.find(app.name, version);
         if (!binPath) {
-            console.log('Cache miss for ' + version);
+            core.info(`Cache miss for ${app} ${version}`);
             const downloadPath = yield tc.downloadTool(url);
             fs.chmodSync(downloadPath, "755");
             binPath = yield tc.cacheFile(downloadPath, app.name, app.name, version);
         }
         else {
-            console.log('Cache hit for ' + version);
+            core.info(`Cache hit for ${app} ${version}`);
         }
         core.addPath(binPath);
     });
@@ -2947,7 +2958,7 @@ function getAppsToDownload() {
 function downloadApps() {
     return __awaiter(this, void 0, void 0, function* () {
         const AppInfos = getAppsToDownload();
-        console.log('Installing apps: ' + AppInfos.map((app) => `${app.name}:${app.version}`).join(', '));
+        core.info('Installing apps: ' + AppInfos.map((app) => `${app.name}:${app.version}`).join(', '));
         yield Promise.all(AppInfos.map((app) => installApp(app)));
     });
 }
@@ -7052,7 +7063,6 @@ function _completeToolPath(tool, version, arch) {
     core.debug('finished caching tool');
 }
 function _isExplicitVersion(versionSpec) {
-    core.debug(`versionSpec: ${versionSpec}`);
     const c = semver.clean(versionSpec) || '';
     core.debug(`isExplicit: ${c}`);
     const valid = semver.valid(c) != null;
