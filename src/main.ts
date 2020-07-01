@@ -61,7 +61,7 @@ async function getDownloadUrlForAsset(asset: AssetInfo, release: ReposListReleas
   for (const candidate of release.assets) {
     if (candidate.name == asset.name) {
       console.log(`Found executable ${asset.name} for ${describe(asset.app)}`);
-      return { version: asset.app.version, url: candidate.browser_download_url };
+      return { version: release.name, url: candidate.browser_download_url };
     }
   }
   throw new Error(`Could not find executable ${asset.name} for ${describe(asset.app)}`);
@@ -89,14 +89,22 @@ async function getDownloadUrl(app: AppInfo): Promise<DownloadInfo> {
   throw new Error(`Could not find version "${app.version}" for ${app.name}`);
 }
 
-async function downloadApp(app: AppInfo): Promise<void> {
+async function installApp(app: AppInfo): Promise<void> {
+  console.log('installing ' + describe(app));
   const { version, url } = await getDownloadUrl(app);
 
-  const binPath = await tc.downloadTool(url);
-  fs.chmodSync(binPath, "755")
+  let binPath = tc.find(app.name, version);
   
-  const cachedPath = await tc.cacheFile(binPath, app.name, app.name, version);
-  core.addPath(cachedPath);
+  if (!binPath) {
+    console.log('Cache miss for ' + version);
+    const downloadPath = await tc.downloadTool(url);
+    fs.chmodSync(downloadPath, "755")  
+    binPath = await tc.cacheFile(downloadPath, app.name, app.name, version);
+  } else {
+    console.log('Cache hit for ' + version);
+  }
+
+  core.addPath(binPath);
 }
 
 function parseInput(): string[] {
@@ -125,7 +133,7 @@ function getAppsToDownload(): AppInfo[] {
 async function downloadApps() {
   const AppInfos = getAppsToDownload();
   console.log('Installing apps: ' + AppInfos.map((app: AppInfo) => `${app.name}:${app.version}`).join(', '));
-  await Promise.all(AppInfos.map((app: AppInfo) => downloadApp(app)))
+  await Promise.all(AppInfos.map((app: AppInfo) => installApp(app)))
 }
 
 async function run(): Promise<void> {

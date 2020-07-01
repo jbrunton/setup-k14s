@@ -2882,7 +2882,7 @@ function getDownloadUrlForAsset(asset, release) {
         for (const candidate of release.assets) {
             if (candidate.name == asset.name) {
                 console.log(`Found executable ${asset.name} for ${describe(asset.app)}`);
-                return { version: asset.app.version, url: candidate.browser_download_url };
+                return { version: release.name, url: candidate.browser_download_url };
             }
         }
         throw new Error(`Could not find executable ${asset.name} for ${describe(asset.app)}`);
@@ -2908,13 +2908,21 @@ function getDownloadUrl(app) {
         throw new Error(`Could not find version "${app.version}" for ${app.name}`);
     });
 }
-function downloadApp(app) {
+function installApp(app) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('installing ' + describe(app));
         const { version, url } = yield getDownloadUrl(app);
-        const binPath = yield tc.downloadTool(url);
-        fs.chmodSync(binPath, "755");
-        const cachedPath = yield tc.cacheFile(binPath, app.name, app.name, version);
-        core.addPath(cachedPath);
+        let binPath = tc.find(app.name, version);
+        if (!binPath) {
+            console.log('Cache miss for ' + version);
+            const downloadPath = yield tc.downloadTool(url);
+            fs.chmodSync(downloadPath, "755");
+            binPath = yield tc.cacheFile(downloadPath, app.name, app.name, version);
+        }
+        else {
+            console.log('Cache hit for ' + version);
+        }
+        core.addPath(binPath);
     });
 }
 function parseInput() {
@@ -2940,7 +2948,7 @@ function downloadApps() {
     return __awaiter(this, void 0, void 0, function* () {
         const AppInfos = getAppsToDownload();
         console.log('Installing apps: ' + AppInfos.map((app) => `${app.name}:${app.version}`).join(', '));
-        yield Promise.all(AppInfos.map((app) => downloadApp(app)));
+        yield Promise.all(AppInfos.map((app) => installApp(app)));
     });
 }
 function run() {
@@ -7044,6 +7052,7 @@ function _completeToolPath(tool, version, arch) {
     core.debug('finished caching tool');
 }
 function _isExplicitVersion(versionSpec) {
+    core.debug(`versionSpec: ${versionSpec}`);
     const c = semver.clean(versionSpec) || '';
     core.debug(`isExplicit: ${c}`);
     const valid = semver.valid(c) != null;
