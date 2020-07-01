@@ -2950,13 +2950,13 @@ function installApp(app) {
         const { version, url } = yield getDownloadUrl(app);
         let binPath = tc.find(app.name, version);
         if (!binPath) {
-            core.info(`Cache miss for ${app} ${version}`);
+            core.info(`Cache miss for ${app.name} ${version}`);
             const downloadPath = yield tc.downloadTool(url);
             fs.chmodSync(downloadPath, "755");
             binPath = yield tc.cacheFile(downloadPath, app.name, app.name, version);
         }
         else {
-            core.info(`Cache hit for ${app} ${version}`);
+            core.info(`Cache hit for ${app.name} ${version}`);
         }
         core.addPath(binPath);
     });
@@ -2971,7 +2971,7 @@ function getAppsToDownload() {
     const apps = parseInput();
     if (apps.length == 0) {
         // if no options specified, download all
-        apps.push.apply(apps, k14sApps);
+        apps.push(...k14sApps);
     }
     return apps.map((appName) => {
         if (!k14sApps.includes(appName)) {

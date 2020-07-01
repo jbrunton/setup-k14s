@@ -130,7 +130,7 @@ function getAppsToDownload(): AppInfo[] {
   
   if (apps.length == 0) {
     // if no options specified, download all
-    apps.push.apply(apps, k14sApps);
+    apps.push(...k14sApps);
   }
 
   return apps.map((appName: string) => {
