@@ -50,3 +50,12 @@ jobs:
         ytt: v0.28.0
         token: ${{ secrets.GITHUB_TOKEN }}
     - run: ./test/verify-version.sh ytt 0.28.0
+
+  test-e2e-no-token:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ./
+      with:
+        only: ytt
+    - run: ./test/verify-installed.sh ytt
