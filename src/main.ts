@@ -1,8 +1,8 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-const { GitHub } = require('@actions/github/lib/utils');
-const tc = require('@actions/tool-cache');
-const fs = require('fs')
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { GitHub } from '@actions/github/lib/utils';
+import * as tc from '@actions/tool-cache';
+import * as fs from 'fs';
 
 import {
   ReposListReleasesResponseData,
@@ -107,12 +107,12 @@ async function installApp(app: AppInfo): Promise<void> {
   let binPath = tc.find(app.name, version);
   
   if (!binPath) {
-    core.info(`Cache miss for ${app} ${version}`);
+    core.info(`Cache miss for ${app.name} ${version}`);
     const downloadPath = await tc.downloadTool(url);
     fs.chmodSync(downloadPath, "755")  
     binPath = await tc.cacheFile(downloadPath, app.name, app.name, version);
   } else {
-    core.info(`Cache hit for ${app} ${version}`);
+    core.info(`Cache hit for ${app.name} ${version}`);
   }
 
   core.addPath(binPath);
