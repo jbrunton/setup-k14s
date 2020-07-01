@@ -8,8 +8,7 @@ By default, installs latest versions of `ytt`, `kbld`, `kapp`, `kwt`, `imgpkg` a
 
 ```yaml
 steps:
-- uses: actions/checkout@v2
-- uses: jbrunton/setup-k14s@master
+- uses: jbrunton/setup-k14s@v1
 - run: |
     ytt version
     kbld version
@@ -19,8 +18,7 @@ steps:
 
 ```yaml
 steps:
-- uses: actions/checkout@v2
-- uses: jbrunton/setup-k14s@master
+- uses: jbrunton/setup-k14s@v1
   with:
     token: ${{ secrets.GITHUB_TOKEN }}
 - run: |
@@ -32,8 +30,7 @@ To install only specific apps:
 
 ```yaml
 steps:
-- uses: actions/checkout@v2
-- uses: jbrunton/setup-k14s@master
+- uses: jbrunton/setup-k14s@v1
   with:
     only: ytt, kbld
 - run: |
@@ -45,8 +42,7 @@ To use a specific version of an app:
 
 ```yaml
 steps:
-- uses: actions/checkout@v2
-- uses: jbrunton/setup-k14s@master
+- uses: jbrunton/setup-k14s@v1
   with:
     only: ytt, kbld
     kbld: v0.28.0
