@@ -2880,7 +2880,7 @@ function getDownloadUrl(app) {
                 for (const asset of release.assets) {
                     if (asset.name == assetName) {
                         console.log(`Found executable ${assetName} for ${app.name} ${version}`);
-                        return [version, asset.browser_download_url];
+                        return { version, url: asset.browser_download_url };
                     }
                 }
                 throw new Error(`Could not find executable ${assetName} for ${app.name} ${version}`);
@@ -2899,40 +2899,35 @@ const k14sApps = [
 ];
 function downloadApp(app) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [version, url] = yield getDownloadUrl(app);
-        console.log('Downloading ' + url);
-        const path = yield tc.downloadTool(url);
-        fs.chmodSync(path, "755");
-        const cachedPath = yield tc.cacheFile(path, app.name, app.name, version);
+        const { version, url } = yield getDownloadUrl(app);
+        const binPath = yield tc.downloadTool(url);
+        fs.chmodSync(binPath, "755");
+        const cachedPath = yield tc.cacheFile(binPath, app.name, app.name, version);
         core.addPath(cachedPath);
     });
 }
-function parseApps() {
-    const onlyApps = core.getInput('only');
-    if (!onlyApps) {
-        return k14sApps;
+function parseInput() {
+    return core.getInput('only')
+        .split(',')
+        .map((appName) => appName.trim())
+        .filter((appName) => appName != '');
+}
+function getAppsToDownload() {
+    const apps = parseInput();
+    if (apps.length == 0) {
+        // if no options specified, download all
+        apps.push.apply(apps, k14sApps);
     }
-    const apps = [];
-    onlyApps.split(',').map((appName) => appName.trim()).forEach((appName) => {
+    return apps.map((appName) => {
         if (!k14sApps.includes(appName)) {
             throw Error(`Unknown app: ${appName}`);
         }
-        apps.push(appName);
-    });
-    if (apps.length == 0) {
-        throw new Error(`No apps configured to download. Set "all: true" or see the docs for more options.`);
-    }
-    return apps;
-}
-function parseAppVersions() {
-    const apps = parseApps();
-    return apps.map((appName) => {
         return { name: appName, version: core.getInput(appName) };
     });
 }
 function downloadApps() {
     return __awaiter(this, void 0, void 0, function* () {
-        const appVersions = parseAppVersions();
+        const appVersions = getAppsToDownload();
         console.log('Installing apps: ' + appVersions.map((app) => `${app.name}:${app.version}`).join(', '));
         yield Promise.all(appVersions.map((app) => downloadApp(app)));
     });

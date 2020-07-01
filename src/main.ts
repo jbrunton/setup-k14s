@@ -10,6 +10,11 @@ interface AppVersion {
   version: string
 }
 
+interface DownloadInfo {
+  version: string,
+  url: string
+}
+
 const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
 
 function getAssetSuffix() {
@@ -26,7 +31,7 @@ function getAssetName(app: AppVersion) {
   return `${app.name}-${getAssetSuffix()}`;
 }
 
-async function getDownloadUrl(app: AppVersion): Promise<[string, string]> {
+async function getDownloadUrl(app: AppVersion): Promise<DownloadInfo> {
   const assetName = getAssetName(app);
   const response = await octokit.repos.listReleases({ owner: 'k14s', repo: app.name });
   const releases: ReposListReleasesResponseData = response.data;
@@ -41,7 +46,7 @@ async function getDownloadUrl(app: AppVersion): Promise<[string, string]> {
       for (const asset of release.assets) {
         if (asset.name == assetName) {
           console.log(`Found executable ${assetName} for ${app.name} ${version}`);
-          return [version, asset.browser_download_url];
+          return { version, url: asset.browser_download_url };
         }
       }
       throw new Error(`Could not find executable ${assetName} for ${app.name} ${version}`);
@@ -60,41 +65,40 @@ const k14sApps = [
 ]
 
 async function downloadApp(app: AppVersion): Promise<void> {
-  const [version, url] = await getDownloadUrl(app);
-  console.log('Downloading ' + url);
-  const path = await tc.downloadTool(url);
-  fs.chmodSync(path, "755")
-  const cachedPath = await tc.cacheFile(path, app.name, app.name, version);
+  const { version, url } = await getDownloadUrl(app);
+
+  const binPath = await tc.downloadTool(url);
+  fs.chmodSync(binPath, "755")
+  
+  const cachedPath = await tc.cacheFile(binPath, app.name, app.name, version);
   core.addPath(cachedPath);
 }
 
-function parseApps(): string[] {
-  const onlyApps = core.getInput('only')
-  if (!onlyApps) {
-    return k14sApps;
+function parseInput(): string[] {
+  return core.getInput('only')
+    .split(',')
+    .map((appName: string) => appName.trim())
+    .filter((appName: string) => appName != '');
+}
+
+function getAppsToDownload(): AppVersion[] {
+  const apps = parseInput();
+  
+  if (apps.length == 0) {
+    // if no options specified, download all
+    apps.push.apply(apps, k14sApps);
   }
-  const apps: string[] = [];
-  onlyApps.split(',').map((appName: string) => appName.trim()).forEach((appName: string) => {
+
+  return apps.map((appName: string) => {
     if (!k14sApps.includes(appName)) {
       throw Error(`Unknown app: ${appName}`);
     }
-    apps.push(appName);
-  });
-  if (apps.length == 0) {
-    throw new Error(`No apps configured to download. Set "all: true" or see the docs for more options.`)
-  }
-  return apps;
-}
-
-function parseAppVersions(): AppVersion[] {
-  const apps = parseApps();
-  return apps.map((appName: string) => {
     return { name: appName, version: core.getInput(appName) };
   });
 }
 
 async function downloadApps() {
-  const appVersions = parseAppVersions();
+  const appVersions = getAppsToDownload();
   console.log('Installing apps: ' + appVersions.map((app: AppVersion) => `${app.name}:${app.version}`).join(', '));
   await Promise.all(appVersions.map((app: AppVersion) => downloadApp(app)))
 }
