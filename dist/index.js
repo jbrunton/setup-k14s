@@ -3610,7 +3610,7 @@ function checkMode (stat, options) {
 /***/ }),
 
 /***/ 198:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
@@ -3623,11 +3623,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 const core = __webpack_require__(470);
 const github = __webpack_require__(469);
 const axios = __webpack_require__(53).default;
 const tc = __webpack_require__(533);
 const fs = __webpack_require__(747);
+const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
 function getAssetSuffix() {
     if (process.platform === 'win32') {
         return 'windows-amd64.exe';
@@ -3650,11 +3652,7 @@ function getDownloadUrl(app) {
         // console.log('Checking releases at ' + releasesUrl);
         // const response = await axios.get(releasesUrl);
         //const token = core.getInput('myToken');
-        const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
-        const response = yield octokit.repos.listReleases({
-            owner: 'k14s',
-            repo: app.name,
-        });
+        const response = yield octokit.repos.listReleases({ owner: 'k14s', repo: app.name });
         const releases = response.data;
         const latestVersion = releases[0].name;
         const version = app.version == 'latest' ? latestVersion : app.version;

@@ -1,5 +1,6 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
+import { ReposListReleasesResponseData } from "@octokit/types";
 const axios = require('axios').default;
 const tc = require('@actions/tool-cache');
 const fs = require('fs')
@@ -8,6 +9,8 @@ interface AppVersion {
   name: string,
   version: string
 }
+
+const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
 
 function getAssetSuffix() {
   if (process.platform === 'win32') {
@@ -23,21 +26,10 @@ function getAssetName(app: AppVersion) {
   return `${app.name}-${getAssetSuffix()}`;
 }
 
-async function getDownloadUrl(app: AppVersion): Promise<[AppVersion, string]> {
+async function getDownloadUrl(app: AppVersion): Promise<[string, string]> {
   const assetName = getAssetName(app);
-  // TODO: authenticate
-  // const releasesUrl = `https://api.github.com/repos/k14s/${app.name}/releases`;
-  // console.log('Checking releases at ' + releasesUrl);
-  // const response = await axios.get(releasesUrl);
-  //const token = core.getInput('myToken');
-
-  const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
-
-  const response = await octokit.repos.listReleases({
-    owner: 'k14s',
-    repo: app.name,
-  });
-  const releases = response.data;
+  const response = await octokit.repos.listReleases({ owner: 'k14s', repo: app.name });
+  const releases: ReposListReleasesResponseData = response.data;
   const latestVersion = releases[0].name;
   const version = app.version == 'latest' ? latestVersion : app.version;
   if (app.version == 'latest') {
