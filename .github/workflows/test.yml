@@ -14,11 +14,31 @@ jobs:
   #   - run: |
   #       npm install
   #       npm run all
-  test: # make sure the action works on a clean machine without building
+  test-all: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
     - uses: ./
-      with: 
-        only: kbld, ytt
-        kbld: v0.28.0
+    - name: check all apps installed
+      run: ./test/verify-installed.sh "ytt kbld kapp kwt imgpkg vendir"
+
+  test-only:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ./
+      with:
+        only: ytt, kbld
+    - run: |
+        ./test/verify-installed.sh "ytt kbld"
+        ./test/verify-not-installed.sh "kapp kwt imgpkg vendir"
+
+  test-versions:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ./
+      with:
+        only: ytt
+        ytt: v0.28.0
+    - run: ./test/verify-version.sh ytt 0.28.0
