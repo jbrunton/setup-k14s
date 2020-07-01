@@ -29,8 +29,7 @@
     "@actions/github": "^4.0.0",
     "@actions/tool-cache": "^1.5.5",
     "@octokit/types": "^5.0.1",
-    "@octokit/webhooks": "^7.6.4",
-    "axios": "^0.19.2"
+    "@octokit/webhooks": "^7.6.4"
   },
   "devDependencies": {
     "@types/jest": "^24.0.23",

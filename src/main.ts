@@ -1,9 +1,9 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
-import { ReposListReleasesResponseData } from "@octokit/types";
-const axios = require('axios').default;
 const tc = require('@actions/tool-cache');
 const fs = require('fs')
+
+import { ReposListReleasesResponseData } from "@octokit/types";
 
 interface AppVersion {
   name: string,
