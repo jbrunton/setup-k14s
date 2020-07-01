@@ -1,4 +1,5 @@
 const core = require('@actions/core');
+const github = require('@actions/github');
 const axios = require('axios').default;
 const tc = require('@actions/tool-cache');
 const fs = require('fs')
@@ -25,17 +26,25 @@ function getAssetName(app: AppVersion) {
 async function getDownloadUrl(app: AppVersion): Promise<[AppVersion, string]> {
   const assetName = getAssetName(app);
   // TODO: authenticate
-  const releasesUrl = `https://api.github.com/repos/k14s/${app.name}/releases`;
-  console.log('Checking releases at ' + releasesUrl);
-  const response = await axios.get(releasesUrl);
+  // const releasesUrl = `https://api.github.com/repos/k14s/${app.name}/releases`;
+  // console.log('Checking releases at ' + releasesUrl);
+  // const response = await axios.get(releasesUrl);
+  //const token = core.getInput('myToken');
 
-  const latestVersion = response.data[0].name;
+  const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+
+  const response = await octokit.repos.listReleases({
+    owner: 'k14s',
+    repo: app.name,
+  });
+  const releases = response.data;
+  const latestVersion = releases[0].name;
   const version = app.version == 'latest' ? latestVersion : app.version;
   if (app.version == 'latest') {
     console.log(`Using latest version for ${app.name} (${version})`);
   }
 
-  for (const release of response.data) {
+  for (const release of releases) {
     if (release.name == version) {
       for (const asset of release.assets) {
         if (asset.name == assetName) {
