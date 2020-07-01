@@ -3,9 +3,14 @@ const github = require('@actions/github');
 const tc = require('@actions/tool-cache');
 const fs = require('fs')
 
-import { ReposListReleasesResponseData } from "@octokit/types";
+import {
+  ReposListReleasesResponseData,
+  ReposGetLatestReleaseResponseData
+} from "@octokit/types";
 
 type ArrayElement<A> = A extends readonly (infer T)[] ? T : never
+
+type ReposListReleasesItem = ArrayElement<ReposListReleasesResponseData>;
 
 interface AppInfo {
   name: string,
@@ -21,6 +26,15 @@ interface DownloadInfo {
   version: string,
   url: string
 }
+
+const k14sApps = [
+  'ytt',
+  'kbld',
+  'kapp',
+  'kwt',
+  'imgpkg',
+  'vendir'
+]
 
 const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
 
@@ -43,10 +57,7 @@ function getAssetInfo(app: AppInfo): AssetInfo {
   return { app, name };
 }
 
-async function getDownloadUrlForAsset(
-  asset: AssetInfo,
-  release: ArrayElement<ReposListReleasesResponseData>
-): Promise<DownloadInfo> {
+async function getDownloadUrlForAsset(asset: AssetInfo, release: ReposListReleasesItem): Promise<DownloadInfo> {
   for (const candidate of release.assets) {
     if (candidate.name == asset.name) {
       console.log(`Found executable ${asset.name} for ${describe(asset.app)}`);
@@ -58,31 +69,25 @@ async function getDownloadUrlForAsset(
 
 async function getDownloadUrl(app: AppInfo): Promise<DownloadInfo> {
   const asset = getAssetInfo(app);
+  const repo = { owner: 'k14s', repo: app.name };
+
+  if (app.version == 'latest') {
+    const response = await octokit.repos.getLatestRelease(repo);
+    const release: ReposGetLatestReleaseResponseData = response.data;
+    console.log(`Using latest version for ${app.name} (${release.name})`);
+    return getDownloadUrlForAsset(asset, release);
+  }
+
   const response = await octokit.repos.listReleases({ owner: 'k14s', repo: app.name });
   const releases: ReposListReleasesResponseData = response.data;
-  const latestVersion = releases[0].name;
-  const version = app.version == 'latest' ? latestVersion : app.version;
-  if (app.version == 'latest') {
-    console.log(`Using latest version for ${app.name} (${version})`);
-  }
-
-  for (const release of releases) {
-    if (release.name == version) {
-      return getDownloadUrlForAsset(asset, release)
+  for (const candidate of releases) {
+    if (candidate.name == app.version) {
+      return getDownloadUrlForAsset(asset, candidate);
     }
   }
-  
-  throw new Error(`Could not find version "${version}" for ${app.name}`);
-}
 
-const k14sApps = [
-  'ytt',
-  'kbld',
-  'kapp',
-  'kwt',
-  'imgpkg',
-  'vendir'
-]
+  throw new Error(`Could not find version "${app.version}" for ${app.name}`);
+}
 
 async function downloadApp(app: AppInfo): Promise<void> {
   const { version, url } = await getDownloadUrl(app);

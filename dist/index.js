@@ -2850,6 +2850,14 @@ const core = __webpack_require__(470);
 const github = __webpack_require__(469);
 const tc = __webpack_require__(533);
 const fs = __webpack_require__(747);
+const k14sApps = [
+    'ytt',
+    'kbld',
+    'kapp',
+    'kwt',
+    'imgpkg',
+    'vendir'
+];
 const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
 function describe(app) {
     return `${app.name} ${app.version}`;
@@ -2883,29 +2891,23 @@ function getDownloadUrlForAsset(asset, release) {
 function getDownloadUrl(app) {
     return __awaiter(this, void 0, void 0, function* () {
         const asset = getAssetInfo(app);
+        const repo = { owner: 'k14s', repo: app.name };
+        if (app.version == 'latest') {
+            const response = yield octokit.repos.getLatestRelease(repo);
+            const release = response.data;
+            console.log(`Using latest version for ${app.name} (${release.name})`);
+            return getDownloadUrlForAsset(asset, release);
+        }
         const response = yield octokit.repos.listReleases({ owner: 'k14s', repo: app.name });
         const releases = response.data;
-        const latestVersion = releases[0].name;
-        const version = app.version == 'latest' ? latestVersion : app.version;
-        if (app.version == 'latest') {
-            console.log(`Using latest version for ${app.name} (${version})`);
-        }
-        for (const release of releases) {
-            if (release.name == version) {
-                return getDownloadUrlForAsset(asset, release);
+        for (const candidate of releases) {
+            if (candidate.name == app.version) {
+                return getDownloadUrlForAsset(asset, candidate);
             }
         }
-        throw new Error(`Could not find version "${version}" for ${app.name}`);
+        throw new Error(`Could not find version "${app.version}" for ${app.name}`);
     });
 }
-const k14sApps = [
-    'ytt',
-    'kbld',
-    'kapp',
-    'kwt',
-    'imgpkg',
-    'vendir'
-];
 function downloadApp(app) {
     return __awaiter(this, void 0, void 0, function* () {
         const { version, url } = yield getDownloadUrl(app);
