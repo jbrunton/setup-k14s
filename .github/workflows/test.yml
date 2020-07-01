@@ -14,7 +14,8 @@ jobs:
   #   - run: |
   #       npm install
   #       npm run all
-  test-all: # make sure the action works on a clean machine without building
+        
+  test-e2e-all: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -22,7 +23,7 @@ jobs:
     - name: check all apps installed
       run: ./test/verify-installed.sh ytt kbld kapp kwt imgpkg vendir
 
-  test-only:
+  test-e2e-only:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -33,7 +34,7 @@ jobs:
         ./test/verify-installed.sh ytt kbld
         ./test/verify-not-installed.sh kapp kwt imgpkg vendir
 
-  test-version:
+  test-e2e-version:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
