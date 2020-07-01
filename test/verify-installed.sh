@@ -2,7 +2,7 @@
 
 set -e
 
-apps=$1
+apps=("$@")
 
 if [ -z "$apps" ]; then
   echo "Error: specify apps to check"

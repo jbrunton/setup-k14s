@@ -2181,7 +2181,10 @@ function getAssetName(app) {
 function getDownloadUrl(app) {
     return __awaiter(this, void 0, void 0, function* () {
         const assetName = getAssetName(app);
-        const response = yield axios.get(`https://api.github.com/repos/k14s/${app.name}/releases`);
+        // TODO: authenticate
+        const releasesUrl = `https://api.github.com/repos/k14s/${app.name}/releases`;
+        console.log('Checking releases at ' + releasesUrl);
+        const response = yield axios.get(releasesUrl);
         const latestVersion = response.data[0].name;
         const version = app.version == 'latest' ? latestVersion : app.version;
         if (app.version == 'latest') {
@@ -2212,6 +2215,7 @@ const k14sApps = [
 function downloadApp(app) {
     return __awaiter(this, void 0, void 0, function* () {
         const [version, url] = yield getDownloadUrl(app);
+        console.log('Downloading ' + url);
         const path = yield tc.downloadTool(url);
         fs.chmodSync(path, "755");
         const cachedPath = yield tc.cacheFile(path, app.name, app.name, version);

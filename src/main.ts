@@ -24,7 +24,10 @@ function getAssetName(app: AppVersion) {
 
 async function getDownloadUrl(app: AppVersion): Promise<[AppVersion, string]> {
   const assetName = getAssetName(app);
-  const response = await axios.get(`https://api.github.com/repos/k14s/${app.name}/releases`);
+  // TODO: authenticate
+  const releasesUrl = `https://api.github.com/repos/k14s/${app.name}/releases`;
+  console.log('Checking releases at ' + releasesUrl);
+  const response = await axios.get(releasesUrl);
 
   const latestVersion = response.data[0].name;
   const version = app.version == 'latest' ? latestVersion : app.version;
@@ -57,6 +60,7 @@ const k14sApps = [
 
 async function downloadApp(app: AppVersion): Promise<void> {
   const [version, url] = await getDownloadUrl(app);
+  console.log('Downloading ' + url);
   const path = await tc.downloadTool(url);
   fs.chmodSync(path, "755")
   const cachedPath = await tc.cacheFile(path, app.name, app.name, version);
