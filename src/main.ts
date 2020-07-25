@@ -3,39 +3,10 @@ import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
 import * as tc from '@actions/tool-cache';
 import * as fs from 'fs';
-
-import {
-  ReposListReleasesResponseData,
-  ReposGetLatestReleaseResponseData
-} from "@octokit/types";
-
-type ArrayElement<A> = A extends readonly (infer T)[] ? T : never
-
-type ReposListReleasesItem = ArrayElement<ReposListReleasesResponseData>;
-
-interface AppInfo {
-  name: string,
-  version: string
-}
-
-interface AssetInfo {
-  app: AppInfo,
-  name: string
-}
-
-interface DownloadInfo {
-  version: string,
-  url: string
-}
-
-const k14sApps = [
-  'ytt',
-  'kbld',
-  'kapp',
-  'kwt',
-  'imgpkg',
-  'vendir'
-]
+import { DefaultLogger } from './logger';
+import { DefaultInput } from './input';
+import { AppInfo, AssetInfo, DownloadInfo, ReposListReleasesItem, ReposGetLatestReleaseResponseData, ReposListReleasesResponseData } from './types';
+import {Installer} from './installer';
 
 function createOctokit() {
   const token = core.getInput('token');
@@ -118,37 +89,16 @@ async function installApp(app: AppInfo): Promise<void> {
   core.addPath(binPath);
 }
 
-function parseInput(): string[] {
-  return core.getInput('only')
-    .split(',')
-    .map((appName: string) => appName.trim())
-    .filter((appName: string) => appName != '');
-}
-
-function getAppsToDownload(): AppInfo[] {
-  const apps = parseInput();
-  
-  if (apps.length == 0) {
-    // if no options specified, download all
-    apps.push(...k14sApps);
-  }
-
-  return apps.map((appName: string) => {
-    if (!k14sApps.includes(appName)) {
-      throw Error(`Unknown app: ${appName}`);
-    }
-    return { name: appName, version: core.getInput(appName) };
-  });
-}
-
 async function downloadApps() {
-  const AppInfos = getAppsToDownload();
-  core.info('Installing apps: ' + AppInfos.map((app: AppInfo) => `${app.name}:${app.version}`).join(', '));
-  await Promise.all(AppInfos.map((app: AppInfo) => installApp(app)))
+  const installer = new Installer(DefaultLogger, DefaultInput)
+  const appInfos = installer.getAppsToDownload()
+  core.info('Installing apps: ' + appInfos.map((app: AppInfo) => `${app.name}:${app.version}`).join(', '));
+  await Promise.all(appInfos.map((app: AppInfo) => installApp(app)))
 }
 
 async function run(): Promise<void> {
-  try {console.time('download apps');
+  try {
+    console.time('download apps');
     await downloadApps();
     console.timeEnd('download apps');  
   } catch (error) {
