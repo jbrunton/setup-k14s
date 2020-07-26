@@ -1,13 +1,7 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import * as cp from 'child_process'
-import * as path from 'path'
 import { Installer, k14sApps } from '../src/installer'
 import { Logger } from '../src/logger'
 import { Input } from '../src/input'
-import { mock, MockProxy } from 'jest-mock-extended';
-import { AppInfo } from '../src/types'
-import { stringify } from 'querystring'
+import { mock } from 'jest-mock-extended';
 
 describe('Installer', () => {
   function createInstaller(inputString: string = "", versions?: Map<string, string>): Installer {

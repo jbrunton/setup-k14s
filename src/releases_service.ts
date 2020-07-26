@@ -2,14 +2,15 @@ import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
 import { AppInfo, AssetInfo, ReposListReleasesItem, DownloadInfo, ReposGetLatestReleaseResponseData, ReposListReleasesResponseData } from './types';
 import { Logger } from './logger';
+import { Environment } from './environment';
 
 export class ReleasesService {
-  private _process: NodeJS.Process
+  private _env: Environment
   private _logger: Logger
   private _octokit: InstanceType<typeof GitHub>
 
-  constructor(process: NodeJS.Process, logger: Logger, octokit: InstanceType<typeof GitHub>) {
-    this._process = process
+  constructor(env: Environment, logger: Logger, octokit: InstanceType<typeof GitHub>) {
+    this._env = env
     this._logger = logger
     this._octokit = octokit
   }
@@ -52,7 +53,7 @@ export class ReleasesService {
   }
 
   private getAssetSuffix(): string {
-    switch (this._process.platform) {
+    switch (this._env.platform) {
       case 'win32': return 'windows-amd64.exe';
       case 'darwin': return 'darwin-amd64';
       default: return 'linux-amd64'
