@@ -7,6 +7,7 @@ import { DefaultLogger } from './logger';
 import { DefaultInput } from './input';
 import { AppInfo, AssetInfo, DownloadInfo, ReposListReleasesItem, ReposGetLatestReleaseResponseData, ReposListReleasesResponseData } from './types';
 import {Installer} from './installer';
+import { ReleasesService } from './releases_service';
 
 function createOctokit() {
   const token = core.getInput('token');
@@ -19,61 +20,15 @@ function createOctokit() {
 }
 
 const octokit = createOctokit();
+const releasesService = new ReleasesService(process, DefaultLogger, octokit);
 
 function describe(app: AppInfo): string {
   return `${app.name} ${app.version}`;
 }
 
-function getAssetSuffix() {
-  if (process.platform === 'win32') {
-    return 'windows-amd64.exe';
-  } else if (process.platform === 'darwin') {
-    return 'darwin-amd64';
-  } else {
-    return 'linux-amd64';
-  }
-}
-
-function getAssetInfo(app: AppInfo): AssetInfo {
-  const name = `${app.name}-${getAssetSuffix()}`;
-  return { app, name };
-}
-
-async function getDownloadUrlForAsset(asset: AssetInfo, release: ReposListReleasesItem): Promise<DownloadInfo> {
-  for (const candidate of release.assets) {
-    if (candidate.name == asset.name) {
-      core.info(`Found executable ${asset.name} for ${describe(asset.app)}`);
-      return { version: release.name, url: candidate.browser_download_url };
-    }
-  }
-  throw new Error(`Could not find executable ${asset.name} for ${describe(asset.app)}`);
-}
-
-async function getDownloadUrl(app: AppInfo): Promise<DownloadInfo> {
-  const asset = getAssetInfo(app);
-  const repo = { owner: 'k14s', repo: app.name };
-
-  if (app.version == 'latest') {
-    const response = await octokit.repos.getLatestRelease(repo);
-    const release: ReposGetLatestReleaseResponseData = response.data;
-    core.info(`Using latest version for ${app.name} (${release.name})`);
-    return getDownloadUrlForAsset(asset, release);
-  }
-
-  const response = await octokit.repos.listReleases({ owner: 'k14s', repo: app.name });
-  const releases: ReposListReleasesResponseData = response.data;
-  for (const candidate of releases) {
-    if (candidate.name == app.version) {
-      return getDownloadUrlForAsset(asset, candidate);
-    }
-  }
-
-  throw new Error(`Could not find version "${app.version}" for ${app.name}`);
-}
-
 async function installApp(app: AppInfo): Promise<void> {
   core.info(`Installing ${describe(app)}...`);
-  const { version, url } = await getDownloadUrl(app);
+  const { version, url } = await releasesService.getDownloadUrl(app);
 
   let binPath = tc.find(app.name, version);
   
