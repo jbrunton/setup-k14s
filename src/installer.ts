@@ -2,7 +2,7 @@ import { Logger } from './logger';
 import { Input } from './input';
 import { AppInfo } from './types';
 
-const k14sApps = [
+export const k14sApps = [
   'ytt',
   'kbld',
   'kapp',
