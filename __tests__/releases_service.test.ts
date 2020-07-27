@@ -16,8 +16,8 @@ import { Matcher } from 'jest-mock-extended';
 import { equals } from 'expect/build/jasmineUtils';
 import { Octokit, ListReleasesParameters } from '../src/octokit'
 
-export const isEqual = <T>(expectedValue: T | undefined) =>
-  new Matcher<T | undefined>((actualValue: T | undefined) => {
+export const isEqual = <T>(expectedValue?: T) =>
+  new Matcher<T | undefined>((actualValue?: T) => {
     return equals(actualValue, expectedValue);
   });
 
@@ -62,20 +62,18 @@ describe('ReleasesService', () => {
         name: "ytt-linux-amd64"
       }]
     } as ReposListReleasesItem;
-    const data = [release]
     const response = {
-      data: data
+      data: [release]
     } as OctokitResponse<ReposListReleasesResponseData>
-    const appInfo: AppInfo = { name: "ytt", version: "0.28.0" }
-    const args: ListReleasesParameters | undefined = { owner: 'k14s', repo: appInfo.name }
-    const matcher: Matcher<ListReleasesParameters|undefined> = isEqual(args)
     octokit.repos.listReleases
-      .calledWith(matcher)
+      .calledWith(isEqual({ owner: 'k14s', repo: "ytt" }))
       .mockReturnValue(new Promise((resolve) => {
         resolve(response)
       }))
     const service = createService("linux", octokit)
-    const downloadInfo = await service.getDownloadUrl(appInfo)
+
+    const downloadInfo = await service.getDownloadUrl({ name: "ytt", version: "0.28.0" })
+
     expect(downloadInfo).toEqual({
       version: "0.28.0",
       url: "https://example.com/k14s/ytt/releases/download/v0.28.0/ytt-darwin-amd64",
