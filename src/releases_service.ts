@@ -26,7 +26,9 @@ export class ReleasesService {
       return this.getDownloadUrlForAsset(asset, release);
     }
   
-    const response = await this._octokit.repos.listReleases({ owner: 'k14s', repo: app.name });
+    const args = { owner: 'k14s', repo: app.name }
+    console.log("args: " + JSON.stringify(args))
+    const response = await this._octokit.repos.listReleases(args);
     const releases: ReposListReleasesResponseData = response.data;
     for (const candidate of releases) {
       if (candidate.name == app.version) {
@@ -37,7 +39,7 @@ export class ReleasesService {
     throw new Error(`Could not find version "${app.version}" for ${app.name}`);
   }
 
-  async getDownloadUrlForAsset(asset: AssetInfo, release: ReposListReleasesItem): Promise<DownloadInfo> {
+  private getDownloadUrlForAsset(asset: AssetInfo, release: ReposListReleasesItem): DownloadInfo {
     for (const candidate of release.assets) {
       if (candidate.name == asset.name) {
         this._logger.info(`Found executable ${asset.name} for ${describe(asset.app)}`);
