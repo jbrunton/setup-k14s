@@ -8,16 +8,7 @@ import { DefaultInput } from './input';
 import { AppInfo, AssetInfo, DownloadInfo, ReposListReleasesItem, ReposGetLatestReleaseResponseData, ReposListReleasesResponseData } from './types';
 import {Installer} from './installer';
 import { ReleasesService } from './releases_service';
-
-function createOctokit() {
-  const token = core.getInput('token');
-  if (token) {
-    return github.getOctokit(token);
-  } else {
-    core.warning('No token set, you may experience rate limiting. Set "token: ${{ secrets.GITHUB_TOKEN }}" if you have problems.');
-    return new GitHub();
-  }
-}
+import { createOctokit } from './octokit'
 
 const octokit = createOctokit();
 const releasesService = new ReleasesService(process, DefaultLogger, octokit);

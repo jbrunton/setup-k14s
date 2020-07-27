@@ -14,15 +14,16 @@ import type { OctokitResponse, RequestParameters } from "@octokit/types";
 
 import { Matcher } from 'jest-mock-extended';
 import { equals } from 'expect/build/jasmineUtils';
+import { Octokit, ListReleasesParameters } from '../src/octokit'
 
-export const isEqual = <T>(expectedValue: T) =>
-  new Matcher<T>((actualValue: T) => {
+export const isEqual = <T>(expectedValue: T | undefined) =>
+  new Matcher<T | undefined>((actualValue: T | undefined) => {
     return equals(actualValue, expectedValue);
   });
 
 describe('ReleasesService', () => {
 
-  function createService(platform: string, octokit?: MockProxy<InstanceType<typeof GitHub>>) {
+  function createService(platform: string, octokit?: MockProxy<Octokit>) {
     const env = { platform: platform }
     const logger = mock<Logger>()
     if (octokit == undefined) {
@@ -65,10 +66,11 @@ describe('ReleasesService', () => {
     const response = {
       data: data
     } as OctokitResponse<ReposListReleasesResponseData>
-    const appInfo = { name: "ytt", version: "0.28.0" }
-    //const matcher: RestEndpointMethodTypes["repos"]["getLatestRelease"]["parameters"] = isEqual({ owner: 'k14s', repo: appInfo.name })
+    const appInfo: AppInfo = { name: "ytt", version: "0.28.0" }
+    const args: ListReleasesParameters | undefined = { owner: 'k14s', repo: appInfo.name }
+    const matcher: Matcher<ListReleasesParameters|undefined> = isEqual(args)
     octokit.repos.listReleases
-      //.calledWith(matcher)
+      .calledWith(matcher)
       .mockReturnValue(new Promise((resolve) => {
         resolve(response)
       }))
