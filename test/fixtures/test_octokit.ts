@@ -8,7 +8,7 @@ import {
 
   ReposGetLatestReleaseParameters,
   ReposGetLatestReleaseResponseData
-} from '../../src/octokit';
+} from '../../src/adapters/octokit';
 import { MockProxy, mockDeep } from 'jest-mock-extended';
 import { isEqual } from './matchers'
 

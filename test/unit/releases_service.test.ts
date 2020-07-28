@@ -1,7 +1,7 @@
 import { ReleasesService } from '../../src/releases_service'
-import { ActionsCore } from '../../src/core'
+import { ActionsCore } from '../../src/adapters/core'
 import { mock } from 'jest-mock-extended';
-import { ReposListReleasesItem } from '../../src/octokit'
+import { ReposListReleasesItem } from '../../src/adapters/octokit'
 import { TestOctokit, createTestOctokit } from '../fixtures/test_octokit'
 
 describe('ReleasesService', () => {

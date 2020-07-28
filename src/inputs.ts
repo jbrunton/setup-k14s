@@ -1,4 +1,4 @@
-import { ActionsCore } from './core';
+import { ActionsCore } from './adapters/core';
 import { AppInfo } from './types';
 
 export const k14sApps = [

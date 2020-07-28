@@ -1,12 +1,12 @@
 import { AppInfo, AssetInfo, DownloadInfo } from './types';
-import { ActionsCore } from './core';
+import { ActionsCore } from './adapters/core';
 import { Environment } from './environment';
 import {
   Octokit,
   ReposListReleasesItem,
   ReposListReleasesResponseData,
   ReposGetLatestReleaseResponseData
-} from './octokit'
+} from './adapters/octokit'
 
 export class ReleasesService {
   private _env: Environment

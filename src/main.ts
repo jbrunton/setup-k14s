@@ -1,10 +1,10 @@
 import * as tc from '@actions/tool-cache';
 import * as fs from 'fs';
-import { core } from './core';
+import { core } from './adapters/core';
 import { AppInfo } from './types';
 import { Inputs } from './inputs';
 import { ReleasesService } from './releases_service';
-import { createOctokit } from './octokit'
+import { createOctokit } from './adapters/octokit'
 
 const octokit = createOctokit();
 const releasesService = new ReleasesService(process, core, octokit);
