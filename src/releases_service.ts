@@ -1,4 +1,4 @@
-import {AppInfo, AssetInfo, DownloadInfo} from './types'
+import {AppInfo, DownloadInfo} from './types'
 import {ActionsCore} from './adapters/core'
 import {Environment} from './adapters/environment'
 import {
@@ -19,8 +19,8 @@ export class ReleasesService {
     this._octokit = octokit
   }
 
-  async getDownloadUrl(app: AppInfo): Promise<DownloadInfo> {
-    const asset = this.getAssetInfo(app)
+  async getDownloadInfo(app: AppInfo): Promise<DownloadInfo> {
+    const assetName = this.getAssetName(app.name)
     const repo = {owner: 'k14s', repo: app.name}
 
     const response = await this._octokit.repos.listReleases(repo)
@@ -29,32 +29,36 @@ export class ReleasesService {
     if (app.version == 'latest') {
       const release = this.sortReleases(releases)[0]
       this._core.info(`Using latest version for ${app.name} (${release.name})`)
-      return this.getDownloadUrlForAsset(asset, release)
+      return this.getDownloadInfoForAsset(app, assetName, release)
     }
 
     for (const candidate of releases) {
       if (candidate.name == app.version) {
-        return this.getDownloadUrlForAsset(asset, candidate)
+        return this.getDownloadInfoForAsset(app, assetName, candidate)
       }
     }
 
     throw new Error(`Could not find version "${app.version}" for ${app.name}`)
   }
 
-  private getDownloadUrlForAsset(
-    asset: AssetInfo,
+  private getDownloadInfoForAsset(
+    app: AppInfo,
+    assetName: string,
     release: ReposListReleasesItem
   ): DownloadInfo {
     for (const candidate of release.assets) {
-      if (candidate.name == asset.name) {
-        this._core.info(
-          `Found executable ${asset.name} for ${describe(asset.app)}`
-        )
-        return {version: release.name, url: candidate.browser_download_url}
+      if (candidate.name == assetName) {
+        this._core.info(`Found executable ${assetName} for ${describe(app)}`)
+        return {
+          version: release.name,
+          assetName: assetName,
+          url: candidate.browser_download_url,
+          releaseNotes: release.body
+        }
       }
     }
     throw new Error(
-      `Could not find executable ${asset.name} for ${describe(asset.app)}`
+      `Could not find executable ${assetName} for ${describe(app)}`
     )
   }
 
@@ -69,9 +73,8 @@ export class ReleasesService {
     })
   }
 
-  private getAssetInfo(app: AppInfo): AssetInfo {
-    const name = `${app.name}-${this.getAssetSuffix()}`
-    return {app, name}
+  private getAssetName(appName: string): string {
+    return `${appName}-${this.getAssetSuffix()}`
   }
 
   private getAssetSuffix(): string {

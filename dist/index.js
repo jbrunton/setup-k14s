@@ -2865,33 +2865,38 @@ class ReleasesService {
         this._core = core;
         this._octokit = octokit;
     }
-    getDownloadUrl(app) {
+    getDownloadInfo(app) {
         return __awaiter(this, void 0, void 0, function* () {
-            const asset = this.getAssetInfo(app);
+            const assetName = this.getAssetName(app.name);
             const repo = { owner: 'k14s', repo: app.name };
             const response = yield this._octokit.repos.listReleases(repo);
             const releases = response.data;
             if (app.version == 'latest') {
                 const release = this.sortReleases(releases)[0];
                 this._core.info(`Using latest version for ${app.name} (${release.name})`);
-                return this.getDownloadUrlForAsset(asset, release);
+                return this.getDownloadInfoForAsset(app, assetName, release);
             }
             for (const candidate of releases) {
                 if (candidate.name == app.version) {
-                    return this.getDownloadUrlForAsset(asset, candidate);
+                    return this.getDownloadInfoForAsset(app, assetName, candidate);
                 }
             }
             throw new Error(`Could not find version "${app.version}" for ${app.name}`);
         });
     }
-    getDownloadUrlForAsset(asset, release) {
+    getDownloadInfoForAsset(app, assetName, release) {
         for (const candidate of release.assets) {
-            if (candidate.name == asset.name) {
-                this._core.info(`Found executable ${asset.name} for ${describe(asset.app)}`);
-                return { version: release.name, url: candidate.browser_download_url };
+            if (candidate.name == assetName) {
+                this._core.info(`Found executable ${assetName} for ${describe(app)}`);
+                return {
+                    version: release.name,
+                    assetName: assetName,
+                    url: candidate.browser_download_url,
+                    releaseNotes: release.body
+                };
             }
         }
-        throw new Error(`Could not find executable ${asset.name} for ${describe(asset.app)}`);
+        throw new Error(`Could not find executable ${assetName} for ${describe(app)}`);
     }
     sortReleases(releases) {
         return releases.sort((release1, release2) => {
@@ -2901,9 +2906,8 @@ class ReleasesService {
             return semver.rcompare(version1, version2);
         });
     }
-    getAssetInfo(app) {
-        const name = `${app.name}-${this.getAssetSuffix()}`;
-        return { app, name };
+    getAssetName(appName) {
+        return `${appName}-${this.getAssetSuffix()}`;
     }
     getAssetSuffix() {
         switch (this._env.platform) {
@@ -13379,10 +13383,29 @@ module.exports = require("fs");
 /***/ }),
 
 /***/ 749:
-/***/ (function(__unusedmodule, exports) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -13394,6 +13417,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Installer = void 0;
+const crypto = __importStar(__webpack_require__(417));
 function describe(app) {
     return `${app.name} ${app.version}`;
 }
@@ -13407,16 +13431,19 @@ class Installer {
     installApp(app) {
         return __awaiter(this, void 0, void 0, function* () {
             this._core.info(`Installing ${describe(app)}...`);
-            const { version, url } = yield this._releasesService.getDownloadUrl(app);
-            let binPath = this._cache.find(app.name, version);
+            const downloadInfo = yield this._releasesService.getDownloadInfo(app);
+            // note: app.version and downloadInfo.version may be different:
+            // if app.version is 'latest' then downloadInfo.version will be the concrete version
+            let binPath = this._cache.find(app.name, downloadInfo.version);
             if (!binPath) {
-                this._core.info(`Cache miss for ${app.name} ${version}`);
-                const downloadPath = yield this._cache.downloadTool(url);
+                this._core.info(`Cache miss for ${app.name} ${downloadInfo.version}`);
+                const downloadPath = yield this._cache.downloadTool(downloadInfo.url);
+                this.verifyChecksum(downloadPath, downloadInfo);
                 this._fs.chmodSync(downloadPath, '755');
-                binPath = yield this._cache.cacheFile(downloadPath, app.name, app.name, version);
+                binPath = yield this._cache.cacheFile(downloadPath, app.name, app.name, downloadInfo.version);
             }
             else {
-                this._core.info(`Cache hit for ${app.name} ${version}`);
+                this._core.info(`Cache hit for ${app.name} ${downloadInfo.version}`);
             }
             this._core.addPath(binPath);
         });
@@ -13427,6 +13454,17 @@ class Installer {
                 apps.map((app) => `${app.name}:${app.version}`).join(', '));
             yield Promise.all(apps.map((app) => this.installApp(app)));
         });
+    }
+    verifyChecksum(path, info) {
+        const data = this._fs.readFileSync(path);
+        const digest = crypto.createHash('sha256').update(data).digest('hex');
+        const expectedChecksum = `${digest}  ./${info.assetName}`;
+        if (info.releaseNotes.includes(expectedChecksum)) {
+            this._core.info(`✅  Verified checksum: "${expectedChecksum}"`);
+        }
+        else {
+            throw new Error(`Unable to verify checksum for ${info.assetName}. Expected to find "${expectedChecksum}" in release notes.`);
+        }
     }
 }
 exports.Installer = Installer;

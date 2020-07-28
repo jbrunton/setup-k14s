@@ -11,6 +11,8 @@ describe('Installer', () => {
   const downloadUrl = "example.com/ytt/0.28.0/ytt-linux-amd64"
   const downloadPath = "/downloads/ytt-linux-amd64"
   const binPath = "/bin/ytt"
+  const expectedContent = "foo bar baz"
+  const expectedChecksum = '"dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"'
 
   let installer: Installer
   let core: MockProxy<ActionsCore>
@@ -27,9 +29,11 @@ describe('Installer', () => {
 
     const downloadInfo: DownloadInfo = {
       version: "0.28.0",
-      url: downloadUrl
+      url: downloadUrl,
+      assetName: "ytt-linux-amd64",
+      releaseNotes: `* some cool stuff\n${expectedChecksum}`
     }
-    releasesService.getDownloadUrl
+    releasesService.getDownloadInfo
       .calledWith(app)
       .mockReturnValue(new Promise(resolve => resolve(downloadInfo)))
   })
@@ -41,10 +45,14 @@ describe('Installer', () => {
     cache.cacheFile
       .calledWith(downloadPath, "ytt", "ytt", "0.28.0")
       .mockReturnValue(new Promise (resolve => resolve(binPath)))
+    fs.readFileSync
+      .calledWith(downloadPath)
+      .mockReturnValue(new Buffer(expectedContent, "utf8"))
 
     await installer.installApp(app)
 
     expect(core.info).toHaveBeenCalledWith("Cache miss for ytt 0.28.0")
+    expect(core.info).toHaveBeenCalledWith(`✅  Verified checksum: "dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"`)
     expect(fs.chmodSync).toHaveBeenCalledWith(downloadPath, "755")
     expect(core.addPath).toHaveBeenCalledWith(binPath)
   })
@@ -57,5 +65,21 @@ describe('Installer', () => {
     expect(core.info).toHaveBeenCalledWith("Cache hit for ytt 0.28.0")
     expect(cache.downloadTool).not.toHaveBeenCalled()
     expect(core.addPath).toHaveBeenCalledWith(binPath)
+  })
+
+  test('it verifies the checksum', async () => {
+    cache.downloadTool
+      .calledWith(downloadUrl)
+      .mockReturnValue(new Promise(resolve => resolve(downloadPath)))
+    cache.cacheFile
+      .calledWith(downloadPath, "ytt", "ytt", "0.28.0")
+      .mockReturnValue(new Promise (resolve => resolve(binPath)))
+    fs.readFileSync
+      .calledWith(downloadPath)
+      .mockReturnValue(new Buffer("unexpected content", "utf8"))
+
+    const result = installer.installApp(app)
+
+    await expect(result).rejects.toThrowError('Unable to verify checksum for ytt-linux-amd64. Expected to find "70f71fa558520b944152eea2ec934c63374c630302a981eab010e0da97bc2f24  ./ytt-linux-amd64" in release notes.')
   })
 })
