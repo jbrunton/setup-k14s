@@ -4,9 +4,9 @@ import {Environment} from './adapters/environment'
 import {
   Octokit,
   ReposListReleasesItem,
-  ReposListReleasesResponseData,
-  ReposGetLatestReleaseResponseData
+  ReposListReleasesResponseData
 } from './adapters/octokit'
+import * as semver from 'semver'
 
 export class ReleasesService {
   private _env: Environment
@@ -23,15 +23,15 @@ export class ReleasesService {
     const asset = this.getAssetInfo(app)
     const repo = {owner: 'k14s', repo: app.name}
 
+    const response = await this._octokit.repos.listReleases(repo)
+    const releases: ReposListReleasesResponseData = response.data
+
     if (app.version == 'latest') {
-      const response = await this._octokit.repos.getLatestRelease(repo)
-      const release: ReposGetLatestReleaseResponseData = response.data
+      const release = this.sortReleases(releases)[0]
       this._core.info(`Using latest version for ${app.name} (${release.name})`)
       return this.getDownloadUrlForAsset(asset, release)
     }
 
-    const response = await this._octokit.repos.listReleases(repo)
-    const releases: ReposListReleasesResponseData = response.data
     for (const candidate of releases) {
       if (candidate.name == app.version) {
         return this.getDownloadUrlForAsset(asset, candidate)
@@ -56,6 +56,17 @@ export class ReleasesService {
     throw new Error(
       `Could not find executable ${asset.name} for ${describe(asset.app)}`
     )
+  }
+
+  private sortReleases(
+    releases: Array<ReposListReleasesItem>
+  ): Array<ReposListReleasesItem> {
+    return releases.sort((release1, release2) => {
+      // note: if a name isn't in semver format (e.g. "0.1.0 - initial release"), we put it last
+      const version1 = semver.clean(release1.name) || '0.0.0'
+      const version2 = semver.clean(release2.name) || '0.0.0'
+      return semver.rcompare(version1, version2)
+    })
   }
 
   private getAssetInfo(app: AppInfo): AssetInfo {
