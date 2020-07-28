@@ -65,13 +65,13 @@ export class Installer {
 
   private verifyChecksum(path: string, info: DownloadInfo) {
     const data = this._fs.readFileSync(path)
-    const sha = crypto.createHash('sha256').update(data).digest('hex')
-    const expectedDigest = `${sha}  ./${info.assetName}`
-    if (info.releaseNotes.includes(expectedDigest)) {
-      this._core.info(`✅  Verified checksum: "${expectedDigest}"`)
+    const digest = crypto.createHash('sha256').update(data).digest('hex')
+    const expectedChecksum = `${digest}  ./${info.assetName}`
+    if (info.releaseNotes.includes(expectedChecksum)) {
+      this._core.info(`✅  Verified checksum: "${expectedChecksum}"`)
     } else {
       throw new Error(
-        `Unable to verify checksum for ${info.assetName}. Expected to find digest "${expectedDigest}" in release notes.`
+        `Unable to verify checksum for ${info.assetName}. Expected to find "${expectedChecksum}" in release notes.`
       )
     }
   }

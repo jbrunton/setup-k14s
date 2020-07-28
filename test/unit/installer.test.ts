@@ -52,6 +52,7 @@ describe('Installer', () => {
     await installer.installApp(app)
 
     expect(core.info).toHaveBeenCalledWith("Cache miss for ytt 0.28.0")
+    expect(core.info).toHaveBeenCalledWith(`✅  Verified checksum: "dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"`)
     expect(fs.chmodSync).toHaveBeenCalledWith(downloadPath, "755")
     expect(core.addPath).toHaveBeenCalledWith(binPath)
   })
@@ -62,7 +63,6 @@ describe('Installer', () => {
     await installer.installApp(app)
 
     expect(core.info).toHaveBeenCalledWith("Cache hit for ytt 0.28.0")
-    expect(core.info).toHaveBeenCalledWith(`✅  Verified checksum: "fbc1a9f858ea9e177916964bd88c3d37b91a1e84412765e29950777f265c4b75  ./ytt-linux-amd64"`)
     expect(cache.downloadTool).not.toHaveBeenCalled()
     expect(core.addPath).toHaveBeenCalledWith(binPath)
   })
@@ -80,6 +80,6 @@ describe('Installer', () => {
 
     const result = installer.installApp(app)
 
-    await expect(result).rejects.toThrowError('Unable to verify checksum for ytt-linux-amd64. Expected to find digest "70f71fa558520b944152eea2ec934c63374c630302a981eab010e0da97bc2f24  ./ytt-linux-amd64" in release notes.')
+    await expect(result).rejects.toThrowError('Unable to verify checksum for ytt-linux-amd64. Expected to find "70f71fa558520b944152eea2ec934c63374c630302a981eab010e0da97bc2f24  ./ytt-linux-amd64" in release notes.')
   })
 })
