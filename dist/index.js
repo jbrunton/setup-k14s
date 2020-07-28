@@ -3506,7 +3506,7 @@ function run() {
         const installer = new installer_1.Installer(core_1.core, cache_1.cache, fs_1.fs, releasesService);
         try {
             console.time('download apps');
-            const apps = new inputs_1.Inputs(core_1.core).getAppsToDownload();
+            const apps = new inputs_1.Inputs(core_1.core, process).getAppsToDownload();
             yield installer.installAll(apps);
             console.timeEnd('download apps');
         }
@@ -12526,14 +12526,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Inputs = exports.k14sApps = void 0;
 exports.k14sApps = ['ytt', 'kbld', 'kapp', 'kwt', 'imgpkg', 'vendir'];
 class Inputs {
-    constructor(core) {
+    constructor(core, env) {
         this._core = core;
+        this._env = env;
     }
     getAppsToDownload() {
         const apps = this.parseAppsList();
         if (apps.length == 0) {
             // if no options specified, download all
-            apps.push(...exports.k14sApps);
+            apps.push(...this.getAllApps());
         }
         this._apps = apps.map((appName) => {
             if (!exports.k14sApps.includes(appName)) {
@@ -12542,6 +12543,13 @@ class Inputs {
             return { name: appName, version: this._core.getInput(appName) };
         });
         return this._apps;
+    }
+    getAllApps() {
+        if (this._env.platform == 'win32') {
+            // kwt isn't available for Windows
+            return exports.k14sApps.filter(app => app != 'kwt');
+        }
+        return exports.k14sApps;
     }
     parseAppsList() {
         return this._core
