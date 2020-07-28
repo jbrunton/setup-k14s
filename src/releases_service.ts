@@ -7,6 +7,7 @@ import {
   ReposListReleasesResponseData,
 } from './adapters/octokit'
 import * as semver from 'semver'
+import { version } from 'punycode'
 
 export class ReleasesService {
   private _env: Environment
@@ -27,9 +28,7 @@ export class ReleasesService {
     const releases: ReposListReleasesResponseData = response.data
 
     if (app.version == 'latest') {
-      const release = releases.sort((release1, release2) => {
-        return semver.rcompare(release1.name, release2.name)
-      })[0]
+      const release = this.sortReleases(releases)[0]
       this._core.info(`Using latest version for ${app.name} (${release.name})`)
       return this.getDownloadUrlForAsset(asset, release)
     }
@@ -58,6 +57,14 @@ export class ReleasesService {
     throw new Error(
       `Could not find executable ${asset.name} for ${describe(asset.app)}`
     )
+  }
+
+  private sortReleases(releases: Array<ReposListReleasesItem>): Array<ReposListReleasesItem> {
+    return releases.sort((release1, release2) => {
+      const version1 = semver.clean(release1.name) || "0.0.0"
+      const version2 = semver.clean(release2.name) || "0.0.0"
+      return semver.rcompare(version1, version2)
+    })
   }
 
   private getAssetInfo(app: AppInfo): AssetInfo {

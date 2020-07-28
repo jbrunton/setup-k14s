@@ -33,7 +33,7 @@ describe('ReleasesService', () => {
     }
   })
 
-  function getReleaseJson(app: string, version: string): ReposListReleasesItem {
+  function releaseJsonFor(app: string, version: string): ReposListReleasesItem {
     return {
       name: version,
       assets: [{
@@ -45,20 +45,23 @@ describe('ReleasesService', () => {
 
   describe('getDownloadUrlForAsset()', () => {
     let service: ReleasesService
+    let octokit: TestOctokit
+
+    function stubListReleasesResponse(releases: Array<ReposListReleasesItem>) {
+      const params = { owner: "k14s", repo: "ytt" }
+      octokit.stubListReleasesResponse(params, releases)
+    }
 
     beforeEach(() => {
-      const octokit = createTestOctokit()
-      const oldPatchRelease = getReleaseJson("ytt", "0.1.2")
-      const latestRelease = getReleaseJson("ytt", "0.28.0")
-      const prevRelease = getReleaseJson("ytt", "0.27.0")
-
-      const params = { owner: "k14s", repo: "ytt" }
-      octokit.stubListReleasesResponse(params, [oldPatchRelease, latestRelease, prevRelease])
-      
+      octokit = createTestOctokit()      
       service = createService("linux", octokit)
     })
 
     test('it returns the asset for the specific version, if given', async () => {
+      stubListReleasesResponse([
+        releaseJsonFor("ytt", "0.28.0"),
+        releaseJsonFor("ytt", "0.27.0")
+      ])
       const downloadInfo = await service.getDownloadUrl({ name: "ytt", version: "0.27.0" })
       expect(downloadInfo).toEqual({
         version: "0.27.0",
@@ -67,6 +70,11 @@ describe('ReleasesService', () => {
     })
 
     test('it returns the latest version', async () => {
+      stubListReleasesResponse([
+        releaseJsonFor("ytt", "0.1.2"), // check we ignore patches for older versions
+        releaseJsonFor("ytt", "0.28.0"),
+        releaseJsonFor("ytt", "0.27.0")
+      ])
       const downloadInfo = await service.getDownloadUrl({ name: "ytt", version: "latest" })
       expect(downloadInfo).toEqual({
         version: "0.28.0",
@@ -75,8 +83,28 @@ describe('ReleasesService', () => {
     })
 
     test('errors if it cannot find the version', async () => {
+      stubListReleasesResponse([
+        releaseJsonFor("ytt", "0.28.0"),
+        releaseJsonFor("ytt", "0.27.0")
+      ])
       const result = service.getDownloadUrl({ name: "ytt", version: "not-a-version" })
       await expect(result).rejects.toThrowError('Could not find version "not-a-version" for ytt')
+    })
+  })
+
+  describe('getAssetSuffix()', () => {
+    test('it cleans version names and puts funky names last', () => {
+      const service = createService("linux", createTestOctokit())
+      const releases = [
+        releaseJsonFor("ytt", "0.1.2"),
+        releaseJsonFor("ytt", "0.28.0"),
+        releaseJsonFor("ytt", "0.2.0 - initial release"), // vendir has a release with a name like this
+        releaseJsonFor("ytt", "0.27.0")
+      ]
+
+      const orderedResults = service["sortReleases"](releases).map(result => result.name)
+      
+      expect(orderedResults).toEqual(["0.28.0", "0.27.0", "0.1.2", "0.2.0 - initial release"])
     })
   })
 })
