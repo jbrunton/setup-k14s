@@ -27,9 +27,12 @@ describe('Installer', () => {
 
     const downloadInfo: DownloadInfo = {
       version: "0.28.0",
-      url: downloadUrl
+      url: downloadUrl,
+      assetName: "ytt-linux-amd64",
+      // this is the checksum for a file with content "foo bar baz"
+      releaseNotes: "dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"
     }
-    releasesService.getDownloadUrl
+    releasesService.getDownloadInfo
       .calledWith(app)
       .mockReturnValue(new Promise(resolve => resolve(downloadInfo)))
   })
@@ -41,6 +44,9 @@ describe('Installer', () => {
     cache.cacheFile
       .calledWith(downloadPath, "ytt", "ytt", "0.28.0")
       .mockReturnValue(new Promise (resolve => resolve(binPath)))
+    fs.readFileSync
+      .calledWith(downloadPath)
+      .mockReturnValue(new Buffer("foo bar baz", "utf8"))
 
     await installer.installApp(app)
 
@@ -57,5 +63,21 @@ describe('Installer', () => {
     expect(core.info).toHaveBeenCalledWith("Cache hit for ytt 0.28.0")
     expect(cache.downloadTool).not.toHaveBeenCalled()
     expect(core.addPath).toHaveBeenCalledWith(binPath)
+  })
+
+  test('it verifies the checksum', async () => {
+    cache.downloadTool
+      .calledWith(downloadUrl)
+      .mockReturnValue(new Promise(resolve => resolve(downloadPath)))
+    cache.cacheFile
+      .calledWith(downloadPath, "ytt", "ytt", "0.28.0")
+      .mockReturnValue(new Promise (resolve => resolve(binPath)))
+    fs.readFileSync
+      .calledWith(downloadPath)
+      .mockReturnValue(new Buffer("foo bar", "utf8"))
+
+    const result = installer.installApp(app)
+
+    await expect(result).rejects.toThrowError('Unable to verify checksum: "fbc1a9f858ea9e177916964bd88c3d37b91a1e84412765e29950777f265c4b75  ./ytt-linux-amd64"')
   })
 })
