@@ -24,9 +24,7 @@ export function createTestOctokit(): TestOctokit {
     } as OctokitResponse<ReposListReleasesResponseData>
     octokit.repos.listReleases
       .calledWith(isEqual(params))
-      .mockReturnValue(new Promise((resolve) => {
-        resolve(response)
-      }))
+      .mockReturnValue(Promise.resolve(response)))
     }
 
   return octokit as TestOctokit

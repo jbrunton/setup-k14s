@@ -35,16 +35,16 @@ describe('Installer', () => {
     }
     releasesService.getDownloadInfo
       .calledWith(app)
-      .mockReturnValue(new Promise(resolve => resolve(downloadInfo)))
+      .mockReturnValue(Promise.resolve(downloadInfo))
   })
 
   test('it installs a new app', async () => {
     cache.downloadTool
       .calledWith(downloadUrl)
-      .mockReturnValue(new Promise(resolve => resolve(downloadPath)))
+      .mockReturnValue(Promise.resolve(downloadPath))
     cache.cacheFile
       .calledWith(downloadPath, "ytt", "ytt", "0.28.0")
-      .mockReturnValue(new Promise (resolve => resolve(binPath)))
+      .mockReturnValue(Promise.resolve(binPath))
     fs.readFileSync
       .calledWith(downloadPath)
       .mockReturnValue(new Buffer(expectedContent, "utf8"))
@@ -70,10 +70,10 @@ describe('Installer', () => {
   test('it verifies the checksum', async () => {
     cache.downloadTool
       .calledWith(downloadUrl)
-      .mockReturnValue(new Promise(resolve => resolve(downloadPath)))
+      .mockReturnValue(Promise.resolve(downloadPath))
     cache.cacheFile
       .calledWith(downloadPath, "ytt", "ytt", "0.28.0")
-      .mockReturnValue(new Promise (resolve => resolve(binPath)))
+      .mockReturnValue(Promise.resolve(binPath))
     fs.readFileSync
       .calledWith(downloadPath)
       .mockReturnValue(new Buffer("unexpected content", "utf8"))
