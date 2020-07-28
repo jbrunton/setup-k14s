@@ -1,15 +1,13 @@
-import * as core from '@actions/core';
 import * as tc from '@actions/tool-cache';
 import * as fs from 'fs';
-import { DefaultLogger } from './logger';
-import { DefaultInput } from './input';
+import { core } from './core';
 import { AppInfo } from './types';
-import {Installer} from './installer';
+import {Installer} from './inputs';
 import { ReleasesService } from './releases_service';
 import { createOctokit } from './octokit'
 
 const octokit = createOctokit();
-const releasesService = new ReleasesService(process, DefaultLogger, octokit);
+const releasesService = new ReleasesService(process, core, octokit);
 
 function describe(app: AppInfo): string {
   return `${app.name} ${app.version}`;
@@ -34,7 +32,7 @@ async function installApp(app: AppInfo): Promise<void> {
 }
 
 async function downloadApps() {
-  const installer = new Installer(DefaultLogger, DefaultInput)
+  const installer = new Installer(core)
   const appInfos = installer.getAppsToDownload()
   core.info('Installing apps: ' + appInfos.map((app: AppInfo) => `${app.name}:${app.version}`).join(', '));
   await Promise.all(appInfos.map((app: AppInfo) => installApp(app)))

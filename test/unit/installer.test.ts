@@ -1,24 +1,22 @@
-import { Installer, k14sApps } from '../../src/installer'
-import { Logger } from '../../src/logger'
-import { Input } from '../../src/input'
+import { Installer, k14sApps } from '../../src/inputs'
+import { ActionsCore } from '../../src/core'
 import { mock } from 'jest-mock-extended';
 
 describe('Installer', () => {
   function createInstaller(inputString: string = "", versions?: Map<string, string>): Installer {
-    const logger = mock<Logger>()
-    const input = mock<Input>()
-    input.getInput.calledWith('only').mockReturnValue(inputString)
+    const core = mock<ActionsCore>()
+    core.getInput.calledWith('only').mockReturnValue(inputString)
     for (let appName of k14sApps) {
       if (versions != undefined) {
         const version = versions.get(appName)
         if (version != undefined) {
-          input.getInput.calledWith(appName).mockReturnValue(version)
+          core.getInput.calledWith(appName).mockReturnValue(version)
           continue
         }
       }
-      input.getInput.calledWith(appName).mockReturnValue('latest')
+      core.getInput.calledWith(appName).mockReturnValue('latest')
     }
-    return new Installer(logger, input)
+    return new Installer(core)
   }
 
   describe('getAppsToDownload()', () => {

@@ -1,5 +1,5 @@
 import { ReleasesService } from '../../src/releases_service'
-import { Logger } from '../../src/logger'
+import { ActionsCore } from '../../src/core'
 import { mock } from 'jest-mock-extended';
 import { ReposListReleasesItem } from '../../src/octokit'
 import { TestOctokit, createTestOctokit } from '../fixtures/test_octokit'
@@ -8,8 +8,8 @@ describe('ReleasesService', () => {
 
   function createService(platform: string, octokit: TestOctokit = createTestOctokit()) {
     const env = { platform: platform }
-    const logger = mock<Logger>()
-    return new ReleasesService(env, logger, octokit)
+    const core = mock<ActionsCore>()
+    return new ReleasesService(env, core, octokit)
   }
 
   test('getAssetInfo()', () => {

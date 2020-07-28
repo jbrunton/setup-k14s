@@ -1,5 +1,5 @@
 import { AppInfo, AssetInfo, DownloadInfo } from './types';
-import { Logger } from './logger';
+import { ActionsCore } from './core';
 import { Environment } from './environment';
 import {
   Octokit,
@@ -10,12 +10,12 @@ import {
 
 export class ReleasesService {
   private _env: Environment
-  private _logger: Logger
+  private _core: ActionsCore
   private _octokit: Octokit
 
-  constructor(env: Environment, logger: Logger, octokit: Octokit) {
+  constructor(env: Environment, core: ActionsCore, octokit: Octokit) {
     this._env = env
-    this._logger = logger
+    this._core = core
     this._octokit = octokit
   }
 
@@ -26,7 +26,7 @@ export class ReleasesService {
     if (app.version == 'latest') {
       const response = await this._octokit.repos.getLatestRelease(repo);
       const release: ReposGetLatestReleaseResponseData = response.data;
-      this._logger.info(`Using latest version for ${app.name} (${release.name})`);
+      this._core.info(`Using latest version for ${app.name} (${release.name})`);
       return this.getDownloadUrlForAsset(asset, release);
     }
   
@@ -44,7 +44,7 @@ export class ReleasesService {
   private getDownloadUrlForAsset(asset: AssetInfo, release: ReposListReleasesItem): DownloadInfo {
     for (const candidate of release.assets) {
       if (candidate.name == asset.name) {
-        this._logger.info(`Found executable ${asset.name} for ${describe(asset.app)}`);
+        this._core.info(`Found executable ${asset.name} for ${describe(asset.app)}`);
         return { version: release.name, url: candidate.browser_download_url };
       }
     }

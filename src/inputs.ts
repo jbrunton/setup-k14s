@@ -1,5 +1,4 @@
-import { Logger } from './logger';
-import { Input } from './input';
+import { ActionsCore } from './core';
 import { AppInfo } from './types';
 
 export const k14sApps = [
@@ -13,12 +12,10 @@ export const k14sApps = [
 
 export class Installer {
   private _apps?: AppInfo[]
-  private _logger: Logger
-  private _input: Input
+  private _core: ActionsCore
 
-  constructor(logger: Logger, input: Input) {
-    this._logger = logger
-    this._input = input
+  constructor(core: ActionsCore) {
+    this._core = core
   }
 
   public getAppsToDownload(): AppInfo[] {
@@ -33,14 +30,14 @@ export class Installer {
       if (!k14sApps.includes(appName)) {
         throw Error(`Unknown app: ${appName}`);
       }
-      return { name: appName, version: this._input.getInput(appName) };
+      return { name: appName, version: this._core.getInput(appName) };
     });
 
     return this._apps
   }
 
   private parseAppsList(): string[] {
-    return this._input.getInput("only")
+    return this._core.getInput("only")
         .split(',')
         .map((appName: string) => appName.trim())
         .filter((appName: string) => appName != '');
