@@ -20,11 +20,7 @@ jobs:
       run: git diff --exit-code --stat HEAD
 
   test-e2e-all:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: "${{ matrix.os }}"
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
     - uses: ./
@@ -33,8 +29,12 @@ jobs:
     - name: check all apps installed
       run: ./test/verify-installed.sh ytt kbld kapp kwt imgpkg vendir
 
-  test-e2e-only:
-    runs-on: ubuntu-latest
+  test-e2e-specific:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: "${{ matrix.os }}"
     steps:
     - uses: actions/checkout@v1
     - uses: ./
