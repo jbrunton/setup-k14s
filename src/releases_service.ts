@@ -28,7 +28,7 @@ export class ReleasesService {
 
     if (app.version == 'latest') {
       const release = releases.sort((release1, release2) => {
-        return -semver.compare(release1.name, release2.name)
+        return semver.rcompare(release1.name, release2.name)
       })[0]
       this._core.info(`Using latest version for ${app.name} (${release.name})`)
       return this.getDownloadUrlForAsset(asset, release)
