@@ -1,9 +1,12 @@
-import * as github from '@actions/github';
-import { GitHub } from '@actions/github/lib/utils';
-import { AppInfo, AssetInfo, ReposListReleasesItem, DownloadInfo, ReposGetLatestReleaseResponseData, ReposListReleasesResponseData } from './types';
+import { AppInfo, AssetInfo, DownloadInfo } from './types';
 import { Logger } from './logger';
 import { Environment } from './environment';
-import { Octokit, ReposListReleasesParameters } from './octokit'
+import {
+  Octokit,
+  ReposListReleasesItem,
+  ReposListReleasesResponseData,
+  ReposGetLatestReleaseResponseData
+} from './octokit'
 
 export class ReleasesService {
   private _env: Environment
@@ -27,8 +30,7 @@ export class ReleasesService {
       return this.getDownloadUrlForAsset(asset, release);
     }
   
-    const args: ReposListReleasesParameters = { owner: 'k14s', repo: app.name }
-    const response = await this._octokit.repos.listReleases(args);
+    const response = await this._octokit.repos.listReleases(repo);
     const releases: ReposListReleasesResponseData = response.data;
     for (const candidate of releases) {
       if (candidate.name == app.version) {
@@ -66,4 +68,3 @@ export class ReleasesService {
 function describe(app: AppInfo): string {
   return `${app.name} ${app.version}`;
 }
-

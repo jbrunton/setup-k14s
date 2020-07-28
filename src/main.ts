@@ -1,11 +1,9 @@
 import * as core from '@actions/core';
-import * as github from '@actions/github';
-import { GitHub } from '@actions/github/lib/utils';
 import * as tc from '@actions/tool-cache';
 import * as fs from 'fs';
 import { DefaultLogger } from './logger';
 import { DefaultInput } from './input';
-import { AppInfo, AssetInfo, DownloadInfo, ReposListReleasesItem, ReposGetLatestReleaseResponseData, ReposListReleasesResponseData } from './types';
+import { AppInfo } from './types';
 import {Installer} from './installer';
 import { ReleasesService } from './releases_service';
 import { createOctokit } from './octokit'

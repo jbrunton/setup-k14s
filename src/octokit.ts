@@ -1,7 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
-import { RestEndpointMethodTypes } from '@octokit/rest'
 
 import { Endpoints } from "@octokit/types";
 
@@ -21,7 +20,7 @@ export { ReposGetLatestReleaseResponseData } from "@octokit/types";
 export { OctokitResponse } from '@octokit/types'
 export type Octokit = InstanceType<typeof GitHub>
 
-export function createOctokit() {
+export function createOctokit(): Octokit {
   const token = core.getInput('token');
   if (token) {
     return github.getOctokit(token);

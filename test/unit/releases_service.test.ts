@@ -1,25 +1,14 @@
 import { ReleasesService } from '../../src/releases_service'
 import { Logger } from '../../src/logger'
-import { mock, mockDeep, MockProxy } from 'jest-mock-extended';
-import { AppInfo, ReposListReleasesResponseData, ReposListReleasesItem } from '../../src/types'
-import { stringify } from 'querystring'
-import { GitHub } from '@actions/github/lib/utils';
-import type { OctokitResponse, RequestParameters } from "@octokit/types";
-
-import { Matcher } from 'jest-mock-extended';
-import { equals } from 'expect/build/jasmineUtils';
-import { Octokit, ReposListReleasesParameters } from '../../src/octokit'
-import { isEqual } from '../fixtures/matchers'
-import { createTestOctokit } from '../fixtures/test_octokit'
+import { mock } from 'jest-mock-extended';
+import { ReposListReleasesItem } from '../../src/octokit'
+import { TestOctokit, createTestOctokit } from '../fixtures/test_octokit'
 
 describe('ReleasesService', () => {
 
-  function createService(platform: string, octokit?: MockProxy<Octokit>) {
+  function createService(platform: string, octokit: TestOctokit = createTestOctokit()) {
     const env = { platform: platform }
     const logger = mock<Logger>()
-    if (octokit == undefined) {
-      octokit = mock<InstanceType<typeof GitHub>>()
-    }
     return new ReleasesService(env, logger, octokit)
   }
 

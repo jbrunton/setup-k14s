@@ -1,5 +1,5 @@
 export interface Environment {
-  platform: String
+  platform: string
 }
 
 export const NodeEnvironment = {
