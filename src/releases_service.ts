@@ -28,7 +28,7 @@ export class ReleasesService {
 
     if (app.version == 'latest') {
       const release = this.sortReleases(releases)[0]
-      this._core.info(`Using latest version for ${app.name} (${release.name})`)
+      this._core.debug(`Using latest version for ${app.name} (${release.name})`)
       return this.getDownloadInfoForAsset(app, assetName, release)
     }
 
@@ -48,7 +48,7 @@ export class ReleasesService {
   ): DownloadInfo {
     for (const candidate of release.assets) {
       if (candidate.name == assetName) {
-        this._core.info(`Found executable ${assetName} for ${describe(app)}`)
+        this._core.debug(`Found executable ${assetName} for ${describe(app)}`)
         return {
           version: release.name,
           assetName: assetName,

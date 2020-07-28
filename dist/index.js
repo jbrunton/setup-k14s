@@ -2873,7 +2873,7 @@ class ReleasesService {
             const releases = response.data;
             if (app.version == 'latest') {
                 const release = this.sortReleases(releases)[0];
-                this._core.info(`Using latest version for ${app.name} (${release.name})`);
+                this._core.debug(`Using latest version for ${app.name} (${release.name})`);
                 return this.getDownloadInfoForAsset(app, assetName, release);
             }
             for (const candidate of releases) {
@@ -2887,7 +2887,7 @@ class ReleasesService {
     getDownloadInfoForAsset(app, assetName, release) {
         for (const candidate of release.assets) {
             if (candidate.name == assetName) {
-                this._core.info(`Found executable ${assetName} for ${describe(app)}`);
+                this._core.debug(`Found executable ${assetName} for ${describe(app)}`);
                 return {
                     version: release.name,
                     assetName: assetName,
@@ -13430,27 +13430,26 @@ class Installer {
     }
     installApp(app) {
         return __awaiter(this, void 0, void 0, function* () {
-            this._core.info(`Installing ${describe(app)}...`);
             const downloadInfo = yield this._releasesService.getDownloadInfo(app);
             // note: app.version and downloadInfo.version may be different:
             // if app.version is 'latest' then downloadInfo.version will be the concrete version
             let binPath = this._cache.find(app.name, downloadInfo.version);
             if (!binPath) {
-                this._core.info(`Cache miss for ${app.name} ${downloadInfo.version}`);
+                this._core.info(`Downloading ${app.name} ${downloadInfo.version} from ${downloadInfo.url}`);
                 const downloadPath = yield this._cache.downloadTool(downloadInfo.url);
                 this.verifyChecksum(downloadPath, downloadInfo);
                 this._fs.chmodSync(downloadPath, '755');
                 binPath = yield this._cache.cacheFile(downloadPath, app.name, app.name, downloadInfo.version);
             }
             else {
-                this._core.info(`Cache hit for ${app.name} ${downloadInfo.version}`);
+                this._core.info(`${app.name} ${downloadInfo.version} already in tool cache`);
             }
             this._core.addPath(binPath);
         });
     }
     installAll(apps) {
         return __awaiter(this, void 0, void 0, function* () {
-            this._core.info('Installing apps: ' +
+            this._core.info('Installing ' +
                 apps.map((app) => `${app.name}:${app.version}`).join(', '));
             yield Promise.all(apps.map((app) => this.installApp(app)));
         });
