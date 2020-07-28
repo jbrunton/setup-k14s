@@ -7,7 +7,6 @@ import {
   ReposListReleasesResponseData,
 } from './adapters/octokit'
 import * as semver from 'semver'
-import { version } from 'punycode'
 
 export class ReleasesService {
   private _env: Environment

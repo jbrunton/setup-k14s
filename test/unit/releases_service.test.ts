@@ -98,7 +98,7 @@ describe('ReleasesService', () => {
       const releases = [
         releaseJsonFor("ytt", "0.1.2"),
         releaseJsonFor("ytt", "0.28.0"),
-        releaseJsonFor("ytt", "0.2.0 - initial release"), // vendir has a release with a name like this
+        releaseJsonFor("ytt", "0.2.0 - initial release"), // some apps have a "0.1.0 - initial release" version
         releaseJsonFor("ytt", "0.27.0")
       ]
 
