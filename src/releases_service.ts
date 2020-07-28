@@ -62,6 +62,7 @@ export class ReleasesService {
     releases: Array<ReposListReleasesItem>
   ): Array<ReposListReleasesItem> {
     return releases.sort((release1, release2) => {
+      // note: if a name isn't in semver format (e.g. "0.1.0 - initial release"), we put it last
       const version1 = semver.clean(release1.name) || '0.0.0'
       const version2 = semver.clean(release2.name) || '0.0.0'
       return semver.rcompare(version1, version2)

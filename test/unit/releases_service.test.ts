@@ -92,8 +92,8 @@ describe('ReleasesService', () => {
     })
   })
 
-  describe('getAssetSuffix()', () => {
-    test('it cleans version names and puts funky names last', () => {
+  describe('sortReleases()', () => {
+    test('it sorts non-semver names last', () => {
       const service = createService("linux", createTestOctokit())
       const releases = [
         releaseJsonFor("ytt", "0.1.2"),
