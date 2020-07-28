@@ -2872,9 +2872,7 @@ class ReleasesService {
             const response = yield this._octokit.repos.listReleases(repo);
             const releases = response.data;
             if (app.version == 'latest') {
-                const release = releases.sort((release1, release2) => {
-                    return -semver.compare(release1.name, release2.name);
-                })[0];
+                const release = this.sortReleases(releases)[0];
                 this._core.info(`Using latest version for ${app.name} (${release.name})`);
                 return this.getDownloadUrlForAsset(asset, release);
             }
@@ -2894,6 +2892,13 @@ class ReleasesService {
             }
         }
         throw new Error(`Could not find executable ${asset.name} for ${describe(asset.app)}`);
+    }
+    sortReleases(releases) {
+        return releases.sort((release1, release2) => {
+            const version1 = semver.clean(release1.name) || "0.0.0";
+            const version2 = semver.clean(release2.name) || "0.0.0";
+            return semver.rcompare(version1, version2);
+        });
     }
     getAssetInfo(app) {
         const name = `${app.name}-${this.getAssetSuffix()}`;
