@@ -5,8 +5,8 @@ import {
   Octokit,
   ReposListReleasesItem,
   ReposListReleasesResponseData,
-  ReposGetLatestReleaseResponseData
 } from './adapters/octokit'
+import * as semver from 'semver'
 
 export class ReleasesService {
   private _env: Environment
@@ -23,15 +23,17 @@ export class ReleasesService {
     const asset = this.getAssetInfo(app)
     const repo = {owner: 'k14s', repo: app.name}
 
+    const response = await this._octokit.repos.listReleases(repo)
+    const releases: ReposListReleasesResponseData = response.data
+
     if (app.version == 'latest') {
-      const response = await this._octokit.repos.getLatestRelease(repo)
-      const release: ReposGetLatestReleaseResponseData = response.data
+      const release = releases.sort((release1, release2) => {
+        return -semver.compare(release1.name, release2.name)
+      })[0]
       this._core.info(`Using latest version for ${app.name} (${release.name})`)
       return this.getDownloadUrlForAsset(asset, release)
     }
 
-    const response = await this._octokit.repos.listReleases(repo)
-    const releases: ReposListReleasesResponseData = response.data
     for (const candidate of releases) {
       if (candidate.name == app.version) {
         return this.getDownloadUrlForAsset(asset, candidate)

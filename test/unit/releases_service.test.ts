@@ -48,13 +48,13 @@ describe('ReleasesService', () => {
 
     beforeEach(() => {
       const octokit = createTestOctokit()
+      const oldPatchRelease = getReleaseJson("ytt", "0.1.2")
       const latestRelease = getReleaseJson("ytt", "0.28.0")
       const prevRelease = getReleaseJson("ytt", "0.27.0")
 
       const params = { owner: "k14s", repo: "ytt" }
-      octokit.stubListReleasesResponse(params, [latestRelease, prevRelease])
-      octokit.stubLatestReleaseResponse(params, latestRelease)
-
+      octokit.stubListReleasesResponse(params, [oldPatchRelease, latestRelease, prevRelease])
+      
       service = createService("linux", octokit)
     })
 

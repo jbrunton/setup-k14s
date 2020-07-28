@@ -12,10 +12,6 @@ import { ReposListReleasesResponseData } from "@octokit/types";
 export { ReposListReleasesResponseData }
 export type ReposListReleasesItem = ArrayElement<ReposListReleasesResponseData>
 
-// latest releases
-export type ReposGetLatestReleaseParameters = Endpoints["GET /repos/:owner/:repo/releases/latest"]["parameters"]
-export { ReposGetLatestReleaseResponseData } from "@octokit/types";
-
 // Octokit
 export { OctokitResponse } from '@octokit/types'
 export type Octokit = InstanceType<typeof GitHub>
