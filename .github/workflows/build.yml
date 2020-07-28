@@ -19,8 +19,28 @@ jobs:
     - name: check build up to date
       run: git diff --exit-code --stat HEAD
 
-  test-e2e-all: # make sure the action works on a clean machine without building
+  test-e2e-all:
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ./
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: check all apps installed
+      run: ./test/verify-installed.sh ytt kbld kapp kwt imgpkg vendir
+
+  test-e2e-win:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ./
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: check all apps installed
+      run: ./test/verify-installed.sh ytt kbld kapp kwt imgpkg vendir
+
+  test-e2e-mac:
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
     - uses: ./
