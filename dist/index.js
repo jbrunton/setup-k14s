@@ -3491,6 +3491,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const cache_1 = __webpack_require__(37);
 const core_1 = __webpack_require__(182);
+const fs_1 = __webpack_require__(205);
 const inputs_1 = __webpack_require__(842);
 const releases_service_1 = __webpack_require__(50);
 const installer_1 = __webpack_require__(749);
@@ -3499,7 +3500,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const octokit = octokit_1.createOctokit();
         const releasesService = new releases_service_1.ReleasesService(process, core_1.core, octokit);
-        const installer = new installer_1.Installer(core_1.core, cache_1.cache, releasesService);
+        const installer = new installer_1.Installer(core_1.core, cache_1.cache, fs_1.fs, releasesService);
         try {
             console.time('download apps');
             const apps = new inputs_1.Inputs(core_1.core).getAppsToDownload();
@@ -3512,6 +3513,36 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 205:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.fs = __importStar(__webpack_require__(747));
 
 
 /***/ }),
@@ -11859,29 +11890,10 @@ module.exports = require("fs");
 /***/ }),
 
 /***/ 749:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports) {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -11893,14 +11905,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Installer = void 0;
-const fs = __importStar(__webpack_require__(747));
 function describe(app) {
     return `${app.name} ${app.version}`;
 }
 class Installer {
-    constructor(core, cache, releasesService) {
+    constructor(core, cache, fs, releasesService) {
         this._core = core;
         this._cache = cache;
+        this._fs = fs;
         this._releasesService = releasesService;
     }
     installApp(app) {
@@ -11911,7 +11923,8 @@ class Installer {
             if (!binPath) {
                 this._core.info(`Cache miss for ${app.name} ${version}`);
                 const downloadPath = yield this._cache.downloadTool(url);
-                fs.chmodSync(downloadPath, "755");
+                console.log("downloadPath: " + downloadPath);
+                this._fs.chmodSync(downloadPath, "755");
                 binPath = yield this._cache.cacheFile(downloadPath, app.name, app.name, version);
             }
             else {
