@@ -3,7 +3,7 @@ import { GitHub } from '@actions/github/lib/utils';
 import { AppInfo, AssetInfo, ReposListReleasesItem, DownloadInfo, ReposGetLatestReleaseResponseData, ReposListReleasesResponseData } from './types';
 import { Logger } from './logger';
 import { Environment } from './environment';
-import { Octokit, ListReleasesParameters } from './octokit'
+import { Octokit, ReposListReleasesParameters } from './octokit'
 
 export class ReleasesService {
   private _env: Environment
@@ -27,7 +27,7 @@ export class ReleasesService {
       return this.getDownloadUrlForAsset(asset, release);
     }
   
-    const args: ListReleasesParameters = { owner: 'k14s', repo: app.name }
+    const args: ReposListReleasesParameters = { owner: 'k14s', repo: app.name }
     const response = await this._octokit.repos.listReleases(args);
     const releases: ReposListReleasesResponseData = response.data;
     for (const candidate of releases) {

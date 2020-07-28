@@ -5,6 +5,20 @@ import { RestEndpointMethodTypes } from '@octokit/rest'
 
 import { Endpoints } from "@octokit/types";
 
+type ArrayElement<A> = A extends readonly (infer T)[] ? T : never
+
+// list releases types
+export type ReposListReleasesParameters = Endpoints["GET /repos/:owner/:repo/releases"]["parameters"];
+import { ReposListReleasesResponseData } from "@octokit/types";
+export { ReposListReleasesResponseData }
+export type ReposListReleasesItem = ArrayElement<ReposListReleasesResponseData>
+
+// latest releases
+import { ReposGetLatestReleaseResponseData } from "@octokit/types";
+export { ReposGetLatestReleaseResponseData }
+
+// Octokit
+export { OctokitResponse } from '@octokit/types'
 export type Octokit = InstanceType<typeof GitHub>
 
 export function createOctokit() {
@@ -16,5 +30,3 @@ export function createOctokit() {
     return new GitHub();
   }
 }
-
-export type ListReleasesParameters = Endpoints["GET /repos/:owner/:repo/releases"]["parameters"];

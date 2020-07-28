@@ -8,8 +8,9 @@ import type { OctokitResponse, RequestParameters } from "@octokit/types";
 
 import { Matcher } from 'jest-mock-extended';
 import { equals } from 'expect/build/jasmineUtils';
-import { Octokit, ListReleasesParameters } from '../../src/octokit'
+import { Octokit, ReposListReleasesParameters } from '../../src/octokit'
 import { isEqual } from '../fixtures/matchers'
+import { createTestOctokit } from '../fixtures/test_octokit'
 
 describe('ReleasesService', () => {
 
@@ -44,7 +45,7 @@ describe('ReleasesService', () => {
   })
 
   test('getDownloadUrlForAsset()', async () => {
-    const octokit = mockDeep<InstanceType<typeof GitHub>>()
+    const octokit = createTestOctokit()
     const release = {
       name: "0.28.0",
       assets: [{
@@ -52,14 +53,7 @@ describe('ReleasesService', () => {
         name: "ytt-linux-amd64"
       }]
     } as ReposListReleasesItem;
-    const response = {
-      data: [release]
-    } as OctokitResponse<ReposListReleasesResponseData>
-    octokit.repos.listReleases
-      .calledWith(isEqual({ owner: 'k14s', repo: "ytt" }))
-      .mockReturnValue(new Promise((resolve) => {
-        resolve(response)
-      }))
+    octokit.stubListReleasesResponse({ owner: "k14s", repo: "ytt" }, [release])
     const service = createService("linux", octokit)
 
     const downloadInfo = await service.getDownloadUrl({ name: "ytt", version: "0.28.0" })
