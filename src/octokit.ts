@@ -14,8 +14,8 @@ export { ReposListReleasesResponseData }
 export type ReposListReleasesItem = ArrayElement<ReposListReleasesResponseData>
 
 // latest releases
-import { ReposGetLatestReleaseResponseData } from "@octokit/types";
-export { ReposGetLatestReleaseResponseData }
+export type ReposGetLatestReleaseParameters = Endpoints["GET /repos/:owner/:repo/releases/latest"]["parameters"]
+export { ReposGetLatestReleaseResponseData } from "@octokit/types";
 
 // Octokit
 export { OctokitResponse } from '@octokit/types'

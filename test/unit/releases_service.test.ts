@@ -44,23 +44,50 @@ describe('ReleasesService', () => {
     }
   })
 
-  test('getDownloadUrlForAsset()', async () => {
-    const octokit = createTestOctokit()
-    const release = {
-      name: "0.28.0",
+  function getReleaseJson(app: string, version: string): ReposListReleasesItem {
+    return {
+      name: version,
       assets: [{
-        browser_download_url: "https://example.com/k14s/ytt/releases/download/v0.28.0/ytt-darwin-amd64",
-        name: "ytt-linux-amd64"
+        browser_download_url: `https://example.com/k14s/ytt/releases/download/v${version}/ytt-darwin-amd64`,
+        name: `${app}-linux-amd64`
       }]
-    } as ReposListReleasesItem;
-    octokit.stubListReleasesResponse({ owner: "k14s", repo: "ytt" }, [release])
-    const service = createService("linux", octokit)
+    } as ReposListReleasesItem
+  }
 
-    const downloadInfo = await service.getDownloadUrl({ name: "ytt", version: "0.28.0" })
+  describe('getDownloadUrlForAsset()', () => {
+    let service: ReleasesService
 
-    expect(downloadInfo).toEqual({
-      version: "0.28.0",
-      url: "https://example.com/k14s/ytt/releases/download/v0.28.0/ytt-darwin-amd64",
+    beforeEach(() => {
+      const octokit = createTestOctokit()
+      const latestRelease = getReleaseJson("ytt", "0.28.0")
+      const prevRelease = getReleaseJson("ytt", "0.27.0")
+
+      const params = { owner: "k14s", repo: "ytt" }
+      octokit.stubListReleasesResponse(params, [latestRelease, prevRelease])
+      octokit.stubLatestReleaseResponse(params, latestRelease)
+
+      service = createService("linux", octokit)
+    })
+
+    test('it returns the asset for the specific version, if given', async () => {
+      const downloadInfo = await service.getDownloadUrl({ name: "ytt", version: "0.27.0" })
+      expect(downloadInfo).toEqual({
+        version: "0.27.0",
+        url: "https://example.com/k14s/ytt/releases/download/v0.27.0/ytt-darwin-amd64",
+      })
+    })
+
+    test('it returns the latest version', async () => {
+      const downloadInfo = await service.getDownloadUrl({ name: "ytt", version: "latest" })
+      expect(downloadInfo).toEqual({
+        version: "0.28.0",
+        url: "https://example.com/k14s/ytt/releases/download/v0.28.0/ytt-darwin-amd64",
+      })
+    })
+
+    test('errors if it cannot find the version', async () => {
+      const result = service.getDownloadUrl({ name: "ytt", version: "not-a-version" })
+      await expect(result).rejects.toThrowError('Could not find version "not-a-version" for ytt')
     })
   })
 })
