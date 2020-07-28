@@ -10,7 +10,7 @@ export const k14sApps = [
   'vendir'
 ]
 
-export class Installer {
+export class Inputs {
   private _apps?: AppInfo[]
   private _core: ActionsCore
 

@@ -2,7 +2,7 @@ import * as tc from '@actions/tool-cache';
 import * as fs from 'fs';
 import { core } from './core';
 import { AppInfo } from './types';
-import {Installer} from './inputs';
+import { Inputs } from './inputs';
 import { ReleasesService } from './releases_service';
 import { createOctokit } from './octokit'
 
@@ -32,8 +32,8 @@ async function installApp(app: AppInfo): Promise<void> {
 }
 
 async function downloadApps() {
-  const installer = new Installer(core)
-  const appInfos = installer.getAppsToDownload()
+  const inputs = new Inputs(core)
+  const appInfos = inputs.getAppsToDownload()
   core.info('Installing apps: ' + appInfos.map((app: AppInfo) => `${app.name}:${app.version}`).join(', '));
   await Promise.all(appInfos.map((app: AppInfo) => installApp(app)))
 }

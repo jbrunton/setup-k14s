@@ -1,9 +1,9 @@
-import { Installer, k14sApps } from '../../src/inputs'
+import { Inputs, k14sApps } from '../../src/inputs'
 import { ActionsCore } from '../../src/core'
 import { mock } from 'jest-mock-extended';
 
-describe('Installer', () => {
-  function createInstaller(inputString: string = "", versions?: Map<string, string>): Installer {
+describe('Inputs', () => {
+  function createInputs(inputString: string = "", versions?: Map<string, string>): Inputs {
     const core = mock<ActionsCore>()
     core.getInput.calledWith('only').mockReturnValue(inputString)
     for (let appName of k14sApps) {
@@ -16,14 +16,14 @@ describe('Installer', () => {
       }
       core.getInput.calledWith(appName).mockReturnValue('latest')
     }
-    return new Installer(core)
+    return new Inputs(core)
   }
 
   describe('getAppsToDownload()', () => {
     test('defaults to all', () => {
-      const installer = createInstaller()
+      const inputs = createInputs()
     
-      const apps = installer.getAppsToDownload()
+      const apps = inputs.getAppsToDownload()
     
       expect(apps).toEqual([
         { name: "ytt", "version": "latest" },
@@ -36,9 +36,9 @@ describe('Installer', () => {
     })
 
     test('allows version overrides', () => {
-      const installer = createInstaller("", new Map<string, string>([["ytt", "0.28.0"]]))
+      const inputs = createInputs("", new Map<string, string>([["ytt", "0.28.0"]]))
     
-      const apps = installer.getAppsToDownload()
+      const apps = inputs.getAppsToDownload()
     
       expect(apps).toEqual([
         { name: "ytt", "version": "0.28.0" },
@@ -51,9 +51,9 @@ describe('Installer', () => {
     })
 
     test('allows for app list override', () => {
-      const installer = createInstaller("ytt, kbld", new Map<string, string>([["ytt", "0.28.0"]]))
+      const inputs = createInputs("ytt, kbld", new Map<string, string>([["ytt", "0.28.0"]]))
     
-      const apps = installer.getAppsToDownload()
+      const apps = inputs.getAppsToDownload()
     
       expect(apps).toEqual([
         { name: "ytt", "version": "0.28.0" },
@@ -62,8 +62,8 @@ describe('Installer', () => {
     })
 
     test('validates app names', () => {
-      const installer = createInstaller("ytt, kbl")    
-      expect(() => installer.getAppsToDownload()).toThrowError("Unknown app: kbl")
+      const inputs = createInputs("ytt, kbl")    
+      expect(() => inputs.getAppsToDownload()).toThrowError("Unknown app: kbl")
     }) 
   })
 })
