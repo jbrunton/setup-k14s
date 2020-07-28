@@ -68,9 +68,9 @@ jobs:
     - uses: ./
       with:
         only: ytt
-        ytt: v0.28.0
+        ytt: v0.27.0
         token: ${{ secrets.GITHUB_TOKEN }}
-    - run: ./test/verify-version.sh ytt 0.28.0
+    - run: ./test/verify-version.sh ytt v0.27.0
 
   test-e2e-no-token:
     runs-on: ubuntu-latest
