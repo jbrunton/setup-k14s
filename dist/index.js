@@ -11926,7 +11926,6 @@ class Installer {
             if (!binPath) {
                 this._core.info(`Cache miss for ${app.name} ${version}`);
                 const downloadPath = yield this._cache.downloadTool(url);
-                console.log('downloadPath: ' + downloadPath);
                 this._fs.chmodSync(downloadPath, '755');
                 binPath = yield this._cache.cacheFile(downloadPath, app.name, app.name, version);
             }
