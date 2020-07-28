@@ -28,7 +28,6 @@ export class Installer {
   }
 
   async installApp(app: AppInfo): Promise<void> {
-    this._core.info(`Installing ${describe(app)}...`)
     const downloadInfo = await this._releasesService.getDownloadInfo(app)
 
     // note: app.version and downloadInfo.version may be different:
@@ -36,7 +35,9 @@ export class Installer {
     let binPath = this._cache.find(app.name, downloadInfo.version)
 
     if (!binPath) {
-      this._core.info(`Cache miss for ${app.name} ${downloadInfo.version}`)
+      this._core.info(
+        `Downloading ${app.name} ${downloadInfo.version} from ${downloadInfo.url}`
+      )
       const downloadPath = await this._cache.downloadTool(downloadInfo.url)
 
       this.verifyChecksum(downloadPath, downloadInfo)
@@ -49,7 +50,9 @@ export class Installer {
         downloadInfo.version
       )
     } else {
-      this._core.info(`Cache hit for ${app.name} ${downloadInfo.version}`)
+      this._core.info(
+        `${app.name} ${downloadInfo.version} already in tool cache`
+      )
     }
 
     this._core.addPath(binPath)
@@ -57,7 +60,7 @@ export class Installer {
 
   async installAll(apps: Array<AppInfo>) {
     this._core.info(
-      'Installing apps: ' +
+      'Installing ' +
         apps.map((app: AppInfo) => `${app.name}:${app.version}`).join(', ')
     )
     await Promise.all(apps.map((app: AppInfo) => this.installApp(app)))

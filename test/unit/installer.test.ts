@@ -51,7 +51,7 @@ describe('Installer', () => {
 
     await installer.installApp(app)
 
-    expect(core.info).toHaveBeenCalledWith("Cache miss for ytt 0.28.0")
+    expect(core.info).toHaveBeenCalledWith("Downloading ytt 0.28.0 from example.com/ytt/0.28.0/ytt-linux-amd64")
     expect(core.info).toHaveBeenCalledWith(`✅  Verified checksum: "dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"`)
     expect(fs.chmodSync).toHaveBeenCalledWith(downloadPath, "755")
     expect(core.addPath).toHaveBeenCalledWith(binPath)
@@ -62,7 +62,7 @@ describe('Installer', () => {
 
     await installer.installApp(app)
 
-    expect(core.info).toHaveBeenCalledWith("Cache hit for ytt 0.28.0")
+    expect(core.info).toHaveBeenCalledWith("ytt 0.28.0 already in tool cache")
     expect(cache.downloadTool).not.toHaveBeenCalled()
     expect(core.addPath).toHaveBeenCalledWith(binPath)
   })
