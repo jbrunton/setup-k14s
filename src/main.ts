@@ -1,18 +1,15 @@
-import * as tc from '@actions/tool-cache';
-import * as fs from 'fs';
+import { cache } from './adapters/cache';
 import { core } from './adapters/core';
-import { AppInfo } from './types';
 import { Inputs } from './inputs';
 import { ReleasesService } from './releases_service';
 import { Installer } from './installer'
 import { createOctokit } from './adapters/octokit'
-import { NodeEnvironment } from './environment';
-
-const octokit = createOctokit();
-const releasesService = new ReleasesService(process, core, octokit);
-const installer = new Installer(core, tc, releasesService)
 
 async function run(): Promise<void> {
+  const octokit = createOctokit();
+  const releasesService = new ReleasesService(process, core, octokit);
+  const installer = new Installer(core, cache, releasesService)
+  
   try {
     console.time('download apps');
     const apps = new Inputs(core).getAppsToDownload()
