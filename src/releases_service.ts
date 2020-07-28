@@ -1,6 +1,6 @@
 import { AppInfo, AssetInfo, DownloadInfo } from './types';
 import { ActionsCore } from './adapters/core';
-import { Environment } from './environment';
+import { Environment } from './adapters/environment';
 import {
   Octokit,
   ReposListReleasesItem,
