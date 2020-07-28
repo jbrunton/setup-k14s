@@ -4,7 +4,7 @@ import {Environment} from './adapters/environment'
 import {
   Octokit,
   ReposListReleasesItem,
-  ReposListReleasesResponseData,
+  ReposListReleasesResponseData
 } from './adapters/octokit'
 import * as semver from 'semver'
 
@@ -58,10 +58,12 @@ export class ReleasesService {
     )
   }
 
-  private sortReleases(releases: Array<ReposListReleasesItem>): Array<ReposListReleasesItem> {
+  private sortReleases(
+    releases: Array<ReposListReleasesItem>
+  ): Array<ReposListReleasesItem> {
     return releases.sort((release1, release2) => {
-      const version1 = semver.clean(release1.name) || "0.0.0"
-      const version2 = semver.clean(release2.name) || "0.0.0"
+      const version1 = semver.clean(release1.name) || '0.0.0'
+      const version2 = semver.clean(release2.name) || '0.0.0'
       return semver.rcompare(version1, version2)
     })
   }

@@ -2895,8 +2895,8 @@ class ReleasesService {
     }
     sortReleases(releases) {
         return releases.sort((release1, release2) => {
-            const version1 = semver.clean(release1.name) || "0.0.0";
-            const version2 = semver.clean(release2.name) || "0.0.0";
+            const version1 = semver.clean(release1.name) || '0.0.0';
+            const version2 = semver.clean(release2.name) || '0.0.0';
             return semver.rcompare(version1, version2);
         });
     }
