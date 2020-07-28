@@ -1,6 +1,6 @@
-import { Installer, k14sApps } from '../src/installer'
-import { Logger } from '../src/logger'
-import { Input } from '../src/input'
+import { Installer, k14sApps } from '../../src/installer'
+import { Logger } from '../../src/logger'
+import { Input } from '../../src/input'
 import { mock } from 'jest-mock-extended';
 
 describe('Installer', () => {

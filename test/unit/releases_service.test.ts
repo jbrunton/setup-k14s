@@ -1,25 +1,15 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import * as cp from 'child_process'
-import * as path from 'path'
-import { ReleasesService } from '../src/releases_service'
-import { Logger } from '../src/logger'
-import { Input } from '../src/input'
-import { Environment } from '../src/environment'
+import { ReleasesService } from '../../src/releases_service'
+import { Logger } from '../../src/logger'
 import { mock, mockDeep, MockProxy } from 'jest-mock-extended';
-import { AppInfo, ReposListReleasesResponseData, ReposListReleasesItem } from '../src/types'
+import { AppInfo, ReposListReleasesResponseData, ReposListReleasesItem } from '../../src/types'
 import { stringify } from 'querystring'
 import { GitHub } from '@actions/github/lib/utils';
 import type { OctokitResponse, RequestParameters } from "@octokit/types";
 
 import { Matcher } from 'jest-mock-extended';
 import { equals } from 'expect/build/jasmineUtils';
-import { Octokit, ListReleasesParameters } from '../src/octokit'
-
-export const isEqual = <T>(expectedValue?: T) =>
-  new Matcher<T | undefined>((actualValue?: T) => {
-    return equals(actualValue, expectedValue);
-  });
+import { Octokit, ListReleasesParameters } from '../../src/octokit'
+import { isEqual } from '../fixtures/matchers'
 
 describe('ReleasesService', () => {
 
