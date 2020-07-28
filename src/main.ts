@@ -13,7 +13,7 @@ async function run(): Promise<void> {
 
   try {
     console.time('download apps')
-    const apps = new Inputs(core).getAppsToDownload()
+    const apps = new Inputs(core, process).getAppsToDownload()
     await installer.installAll(apps)
     console.timeEnd('download apps')
   } catch (error) {

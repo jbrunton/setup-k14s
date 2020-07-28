@@ -3,7 +3,11 @@ import { ActionsCore } from '../../src/adapters/core'
 import { mock } from 'jest-mock-extended';
 
 describe('Inputs', () => {
-  function createInputs(inputString: string = "", versions?: Map<string, string>): Inputs {
+  function createInputs(
+    platform: string,
+    inputString: string = "",
+    versions?: Map<string, string>
+  ): Inputs {
     const core = mock<ActionsCore>()
     core.getInput.calledWith('only').mockReturnValue(inputString)
     for (let appName of k14sApps) {
@@ -16,12 +20,17 @@ describe('Inputs', () => {
       }
       core.getInput.calledWith(appName).mockReturnValue('latest')
     }
-    return new Inputs(core)
+
+    const env = {
+      platform: platform
+    }
+
+    return new Inputs(core, env)
   }
 
   describe('getAppsToDownload()', () => {
     test('defaults to all', () => {
-      const inputs = createInputs()
+      const inputs = createInputs("linux")
     
       const apps = inputs.getAppsToDownload()
     
@@ -35,8 +44,22 @@ describe('Inputs', () => {
       ])
     })
 
+    test('excludes kwt for windows', () => {
+      const inputs = createInputs("win32")
+    
+      const apps = inputs.getAppsToDownload()
+    
+      expect(apps).toEqual([
+        { name: "ytt", "version": "latest" },
+        { name: "kbld", "version": "latest" },
+        { name: "kapp", "version": "latest" },
+        { name: "imgpkg", "version": "latest" },
+        { name: "vendir", "version": "latest" }
+      ])
+    })
+
     test('allows version overrides', () => {
-      const inputs = createInputs("", new Map<string, string>([["ytt", "0.28.0"]]))
+      const inputs = createInputs("linux", "", new Map<string, string>([["ytt", "0.28.0"]]))
     
       const apps = inputs.getAppsToDownload()
     
@@ -51,7 +74,7 @@ describe('Inputs', () => {
     })
 
     test('allows for app list override', () => {
-      const inputs = createInputs("ytt, kbld", new Map<string, string>([["ytt", "0.28.0"]]))
+      const inputs = createInputs("linux", "ytt, kbld", new Map<string, string>([["ytt", "0.28.0"]]))
     
       const apps = inputs.getAppsToDownload()
     
@@ -62,7 +85,7 @@ describe('Inputs', () => {
     })
 
     test('validates app names', () => {
-      const inputs = createInputs("ytt, kbl")    
+      const inputs = createInputs("linux", "ytt, kbl")    
       expect(() => inputs.getAppsToDownload()).toThrowError("Unknown app: kbl")
     }) 
   })
