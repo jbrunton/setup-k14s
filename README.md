@@ -67,7 +67,7 @@ If you want to run the build and test workflows locally to try out the action, i
 
 You can then run all workflows like this:
 
-    `npm run build && npm run pack && act`
+    npm run build && npm run pack && act
 
 Note: remember to run `build` and `pack` first, as the workflow will act upon the `dist/index.js` file.
 
