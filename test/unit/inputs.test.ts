@@ -3,29 +3,13 @@ import { ActionsCore } from '../../src/adapters/core'
 import { mock } from 'jest-mock-extended';
 
 describe('Inputs', () => {
-  function createInputs(
-    platform: string,
-    inputString: string = "",
-    versions?: Map<string, string>
-  ): Inputs {
+  function createInputs(platform: string, inputs: {[key: string]: string} = {}): Inputs {
     const core = mock<ActionsCore>()
-    core.getInput.calledWith('only').mockReturnValue(inputString)
+    core.getInput.calledWith('only').mockReturnValue(inputs.only || '')
     for (let appName of k14sApps) {
-      if (versions != undefined) {
-        const version = versions.get(appName)
-        if (version != undefined) {
-          core.getInput.calledWith(appName).mockReturnValue(version)
-          continue
-        }
-      }
-      core.getInput.calledWith(appName).mockReturnValue('latest')
+      core.getInput.calledWith(appName).mockReturnValue(inputs[appName] || 'latest')
     }
-
-    const env = {
-      platform: platform
-    }
-
-    return new Inputs(core, env)
+    return new Inputs(core, { platform: platform })
   }
 
   describe('getAppsToDownload()', () => {
@@ -59,7 +43,7 @@ describe('Inputs', () => {
     })
 
     test('allows version overrides', () => {
-      const inputs = createInputs("linux", "", new Map<string, string>([["ytt", "0.28.0"]]))
+      const inputs = createInputs("linux", { ytt: "0.28.0" })
     
       const apps = inputs.getAppsToDownload()
     
@@ -74,7 +58,7 @@ describe('Inputs', () => {
     })
 
     test('allows for app list override', () => {
-      const inputs = createInputs("linux", "ytt, kbld", new Map<string, string>([["ytt", "0.28.0"]]))
+      const inputs = createInputs("linux", { only: "ytt, kbld", ytt: "0.28.0" })
     
       const apps = inputs.getAppsToDownload()
     
@@ -85,7 +69,7 @@ describe('Inputs', () => {
     })
 
     test('validates app names', () => {
-      const inputs = createInputs("linux", "ytt, kbl")    
+      const inputs = createInputs("linux", { only: "ytt, kbl" })    
       expect(() => inputs.getAppsToDownload()).toThrowError("Unknown app: kbl")
     }) 
   })

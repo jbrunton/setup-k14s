@@ -17,17 +17,13 @@ export type TestOctokit = MockProxy<Octokit> & TestMethods
 
 export function createTestOctokit(): TestOctokit {
   const octokit = mockDeep<Octokit>()
-
-  octokit.stubListReleasesResponse = function(params: ReposListReleasesParameters, releases: Array<ReposListReleasesItem>) {
-    const response = {
-      data: releases
-    } as OctokitResponse<ReposListReleasesResponseData>
-    octokit.repos.listReleases
-      .calledWith(isEqual(params))
-      .mockReturnValue(new Promise((resolve) => {
-        resolve(response)
-      }))
-    }
-
+  octokit.stubListReleasesResponse = stubListReleasesResponse
   return octokit as TestOctokit
+}
+
+function stubListReleasesResponse(this: TestOctokit, params: ReposListReleasesParameters, releases: Array<ReposListReleasesItem>) {
+  const response = { data: releases } as OctokitResponse<ReposListReleasesResponseData>
+  this.repos.listReleases
+    .calledWith(isEqual(params))
+    .mockReturnValue(Promise.resolve(response))
 }
