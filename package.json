@@ -28,6 +28,7 @@
     "@actions/core": "^1.2.4",
     "@actions/github": "^4.0.0",
     "@actions/tool-cache": "^1.5.5",
+    "@octokit/rest": "^18.0.3",
     "@octokit/types": "^5.0.1",
     "@octokit/webhooks": "^7.6.4"
   },
@@ -42,6 +43,7 @@
     "eslint-plugin-jest": "^23.17.1",
     "jest": "^26.1.0",
     "jest-circus": "^26.1.0",
+    "jest-mock-extended": "^1.0.9",
     "js-yaml": "^3.14.0",
     "prettier": "^2.0.5",
     "ts-jest": "^26.1.1",
