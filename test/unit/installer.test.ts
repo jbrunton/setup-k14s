@@ -11,6 +11,8 @@ describe('Installer', () => {
   const downloadUrl = "example.com/ytt/0.28.0/ytt-linux-amd64"
   const downloadPath = "/downloads/ytt-linux-amd64"
   const binPath = "/bin/ytt"
+  const expectedContent = "foo bar baz"
+  const expectedChecksum = '"dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"'
 
   let installer: Installer
   let core: MockProxy<ActionsCore>
@@ -29,8 +31,7 @@ describe('Installer', () => {
       version: "0.28.0",
       url: downloadUrl,
       assetName: "ytt-linux-amd64",
-      // this is the checksum for a file with content "foo bar baz"
-      releaseNotes: "dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"
+      releaseNotes: `* some cool stuff\n${expectedChecksum}`
     }
     releasesService.getDownloadInfo
       .calledWith(app)
@@ -46,7 +47,7 @@ describe('Installer', () => {
       .mockReturnValue(new Promise (resolve => resolve(binPath)))
     fs.readFileSync
       .calledWith(downloadPath)
-      .mockReturnValue(new Buffer("foo bar baz", "utf8"))
+      .mockReturnValue(new Buffer(expectedContent, "utf8"))
 
     await installer.installApp(app)
 
@@ -61,6 +62,7 @@ describe('Installer', () => {
     await installer.installApp(app)
 
     expect(core.info).toHaveBeenCalledWith("Cache hit for ytt 0.28.0")
+    expect(core.info).toHaveBeenCalledWith(`✅  Verified checksum: "fbc1a9f858ea9e177916964bd88c3d37b91a1e84412765e29950777f265c4b75  ./ytt-linux-amd64"`)
     expect(cache.downloadTool).not.toHaveBeenCalled()
     expect(core.addPath).toHaveBeenCalledWith(binPath)
   })
@@ -74,10 +76,10 @@ describe('Installer', () => {
       .mockReturnValue(new Promise (resolve => resolve(binPath)))
     fs.readFileSync
       .calledWith(downloadPath)
-      .mockReturnValue(new Buffer("foo bar", "utf8"))
+      .mockReturnValue(new Buffer("unexpected content", "utf8"))
 
     const result = installer.installApp(app)
 
-    await expect(result).rejects.toThrowError('Unable to verify checksum: "fbc1a9f858ea9e177916964bd88c3d37b91a1e84412765e29950777f265c4b75  ./ytt-linux-amd64"')
+    await expect(result).rejects.toThrowError('Unable to verify checksum for ytt-linux-amd64. Expected to find digest "70f71fa558520b944152eea2ec934c63374c630302a981eab010e0da97bc2f24  ./ytt-linux-amd64" in release notes.')
   })
 })
