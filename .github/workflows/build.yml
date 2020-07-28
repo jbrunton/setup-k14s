@@ -14,9 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - run: |
-        npm install
-        npm run all
+    - run: npm install
+    - run: npm run all
+    - name: check dist up to date
+      run: git diff --quiet HEAD
 
   test-e2e-all: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
