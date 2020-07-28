@@ -1,15 +1,14 @@
-
 export interface AppInfo {
-  name: string,
+  name: string
   version: string
 }
 
 export interface AssetInfo {
-  app: AppInfo,
+  app: AppInfo
   name: string
 }
 
 export interface DownloadInfo {
-  version: string,
+  version: string
   url: string
 }

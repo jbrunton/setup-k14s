@@ -2880,9 +2880,12 @@ class ReleasesService {
     }
     getAssetSuffix() {
         switch (this._env.platform) {
-            case 'win32': return 'windows-amd64.exe';
-            case 'darwin': return 'darwin-amd64';
-            default: return 'linux-amd64';
+            case 'win32':
+                return 'windows-amd64.exe';
+            case 'darwin':
+                return 'darwin-amd64';
+            default:
+                return 'linux-amd64';
         }
     }
 }
@@ -11923,8 +11926,8 @@ class Installer {
             if (!binPath) {
                 this._core.info(`Cache miss for ${app.name} ${version}`);
                 const downloadPath = yield this._cache.downloadTool(url);
-                console.log("downloadPath: " + downloadPath);
-                this._fs.chmodSync(downloadPath, "755");
+                console.log('downloadPath: ' + downloadPath);
+                this._fs.chmodSync(downloadPath, '755');
                 binPath = yield this._cache.cacheFile(downloadPath, app.name, app.name, version);
             }
             else {
@@ -11935,7 +11938,8 @@ class Installer {
     }
     installAll(apps) {
         return __awaiter(this, void 0, void 0, function* () {
-            this._core.info('Installing apps: ' + apps.map((app) => `${app.name}:${app.version}`).join(', '));
+            this._core.info('Installing apps: ' +
+                apps.map((app) => `${app.name}:${app.version}`).join(', '));
             yield Promise.all(apps.map((app) => this.installApp(app)));
         });
     }
@@ -12521,14 +12525,7 @@ module.exports = require("url");
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Inputs = exports.k14sApps = void 0;
-exports.k14sApps = [
-    'ytt',
-    'kbld',
-    'kapp',
-    'kwt',
-    'imgpkg',
-    'vendir'
-];
+exports.k14sApps = ['ytt', 'kbld', 'kapp', 'kwt', 'imgpkg', 'vendir'];
 class Inputs {
     constructor(core) {
         this._core = core;
@@ -12548,7 +12545,8 @@ class Inputs {
         return this._apps;
     }
     parseAppsList() {
-        return this._core.getInput("only")
+        return this._core
+            .getInput('only')
             .split(',')
             .map((appName) => appName.trim())
             .filter((appName) => appName != '');
