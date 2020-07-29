@@ -4,6 +4,7 @@ import {ActionsToolCache} from './adapters/cache'
 import {FileSystem} from './adapters/fs'
 import {ReleasesService} from './releases_service'
 import * as crypto from 'crypto'
+import {Environment} from './adapters/environment'
 
 function describe(app: AppInfo): string {
   return `${app.name} ${app.version}`
@@ -13,17 +14,20 @@ export class Installer {
   private _core: ActionsCore
   private _cache: ActionsToolCache
   private _fs: FileSystem
+  private _env: Environment
   private _releasesService: ReleasesService
 
   constructor(
     core: ActionsCore,
     cache: ActionsToolCache,
     fs: FileSystem,
+    env: Environment,
     releasesService: ReleasesService
   ) {
     this._core = core
     this._cache = cache
     this._fs = fs
+    this._env = env
     this._releasesService = releasesService
   }
 
@@ -43,10 +47,12 @@ export class Installer {
       this.verifyChecksum(downloadPath, downloadInfo)
 
       this._fs.chmodSync(downloadPath, '755')
+      const binName =
+        this._env.platform == 'win32' ? `${app.name}.exe` : app.name
       binPath = await this._cache.cacheFile(
         downloadPath,
-        app.name,
-        app.name,
+        binName,
+        binName,
         downloadInfo.version
       )
       this._core.info(`Cached ${app.name} ${downloadInfo.version}`)
