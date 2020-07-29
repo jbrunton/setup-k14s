@@ -9,7 +9,7 @@ const app = process.argv[2]
 const version = process.argv[3]
 
 const info = shell.exec(`${app} version`, { silent: true }).stdout.trim()
-if (info.includes(`${app} version ${version}`)) {
+if (info == `${app} version ${version}`) {
   console.log(`✅  Verified ${app} version is ${version}`)
 } else {
   console.log(`❌  Failure: expected ${app} version to be ${version}, found "${info}"`)
