@@ -49,6 +49,7 @@
     "jest-mock-extended": "^1.0.9",
     "js-yaml": "^3.14.0",
     "prettier": "^2.0.5",
+    "release-it": "^13.6.6",
     "ts-jest": "^26.1.1",
     "typescript": "^3.9.5"
   }
