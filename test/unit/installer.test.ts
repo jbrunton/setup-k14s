@@ -116,7 +116,7 @@ describe('Installer', () => {
 
     await installer.installApp(app)
 
-    expect(core.info).toHaveBeenCalledWith("ytt.exe 0.28.0 already in tool cache")
+    expect(core.info).toHaveBeenCalledWith("ytt 0.28.0 already in tool cache")
     expect(cache.downloadTool).not.toHaveBeenCalled()
     expect(core.addPath).toHaveBeenCalledWith(binPaths.win32)
   })
