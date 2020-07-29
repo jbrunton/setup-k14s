@@ -18,8 +18,9 @@ jobs:
     - uses: ./
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+    - run: npm install
     - name: check all apps installed
-      run: ./test/verify-installed.sh ytt kbld kapp kwt imgpkg vendir
+      run: npm run verify:installed -- ytt kbld kapp kwt imgpkg vendir
 
   test-e2e-specific:
     runs-on: ubuntu-latest    
@@ -29,9 +30,11 @@ jobs:
       with:
         only: ytt, kbld
         token: ${{ secrets.GITHUB_TOKEN }}
-    - run: |
-        ./test/verify-installed.sh ytt kbld
-        ./test/verify-not-installed.sh kapp kwt imgpkg vendir
+    - run: npm install
+    - name: check specific apps are installs
+      run: |
+        npm run verify:installed -- ytt kbld
+        npm run verify:not:installed -- kapp kwt imgpkg vendir
 
   test-e2e-version:
     runs-on: ubuntu-latest
@@ -42,7 +45,9 @@ jobs:
         only: ytt
         ytt: v0.27.0
         token: ${{ secrets.GITHUB_TOKEN }}
-    - run: ./test/verify-version.sh ytt 0.27.0
+    - run: npm install
+    - name: check specific version is installed
+      run: npm run verify:version -- ytt 0.27.0
 
   test-e2e-no-token:
     runs-on: ubuntu-latest
@@ -51,4 +56,6 @@ jobs:
     - uses: ./
       with:
         only: ytt
-    - run: ./test/verify-installed.sh ytt
+    - run: npm install
+    - name: verify app installed without a token
+      run: npm run verify:installed -- ytt
