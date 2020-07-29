@@ -13434,15 +13434,15 @@ class Installer {
             const downloadInfo = yield this._releasesService.getDownloadInfo(app);
             // note: app.version and downloadInfo.version may be different:
             // if app.version is 'latest' then downloadInfo.version will be the concrete version
-            let binPath = this._cache.find(app.name, downloadInfo.version);
+            const binName = this._env.platform == 'win32' ? `${app.name}.exe` : app.name;
+            let binPath = this._cache.find(binName, downloadInfo.version);
             if (!binPath) {
                 this._core.info(`Downloading ${app.name} ${downloadInfo.version} from ${downloadInfo.url}`);
                 const downloadPath = yield this._cache.downloadTool(downloadInfo.url);
                 this.verifyChecksum(downloadPath, downloadInfo);
                 this._fs.chmodSync(downloadPath, '755');
-                const binName = this._env.platform == 'win32' ? `${app.name}.exe` : app.name;
                 binPath = yield this._cache.cacheFile(downloadPath, binName, binName, downloadInfo.version);
-                this._core.info(`Cached ${app.name} ${downloadInfo.version}`);
+                this._core.info(`Cached ${binName} ${downloadInfo.version}`);
             }
             else {
                 this._core.info(`${app.name} ${downloadInfo.version} already in tool cache`);
