@@ -54,7 +54,6 @@ export class Installer {
         binName,
         downloadInfo.version
       )
-      this._core.info(`Cached ${binName} ${downloadInfo.version}`)
     } else {
       this._core.info(
         `${app.name} ${downloadInfo.version} already in tool cache`
@@ -62,7 +61,6 @@ export class Installer {
     }
 
     this._core.addPath(binPath)
-    this._core.info(`Added ${binPath} to path`)
   }
 
   async installAll(apps: Array<AppInfo>) {
