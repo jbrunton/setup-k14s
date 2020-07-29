@@ -13440,11 +13440,13 @@ class Installer {
                 this.verifyChecksum(downloadPath, downloadInfo);
                 this._fs.chmodSync(downloadPath, '755');
                 binPath = yield this._cache.cacheFile(downloadPath, app.name, app.name, downloadInfo.version);
+                this._core.info(`Cached ${app.name} ${downloadInfo.version}`);
             }
             else {
                 this._core.info(`${app.name} ${downloadInfo.version} already in tool cache`);
             }
             this._core.addPath(binPath);
+            this._core.info(`Added ${binPath} to path`);
         });
     }
     installAll(apps) {
