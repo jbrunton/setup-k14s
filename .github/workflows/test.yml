@@ -20,7 +20,11 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
     - run: npm install
     - name: check all apps installed
+      if: matrix.os != 'windows-latest'
       run: npm run verify:installed -- ytt kbld kapp kwt imgpkg vendir
+    - name: check all apps installed (windows)
+      if: matrix.os == 'windows-latest'
+      run: npm run verify:installed -- ytt.exe kbld.exe kapp.exe kwt.exe imgpkg.exe vendir.exe
 
   test-e2e-specific:
     runs-on: ubuntu-latest    
