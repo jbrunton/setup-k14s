@@ -49,6 +49,7 @@ export class Installer {
         app.name,
         downloadInfo.version
       )
+      this._core.info(`Cached ${app.name} ${downloadInfo.version}`)
     } else {
       this._core.info(
         `${app.name} ${downloadInfo.version} already in tool cache`
