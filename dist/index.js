@@ -13432,9 +13432,9 @@ class Installer {
     installApp(app) {
         return __awaiter(this, void 0, void 0, function* () {
             const downloadInfo = yield this._releasesService.getDownloadInfo(app);
+            const binName = this._env.platform == 'win32' ? `${app.name}.exe` : app.name;
             // note: app.version and downloadInfo.version may be different:
             // if app.version is 'latest' then downloadInfo.version will be the concrete version
-            const binName = this._env.platform == 'win32' ? `${app.name}.exe` : app.name;
             let binPath = this._cache.find(binName, downloadInfo.version);
             if (!binPath) {
                 this._core.info(`Downloading ${app.name} ${downloadInfo.version} from ${downloadInfo.url}`);
