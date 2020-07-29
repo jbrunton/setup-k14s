@@ -69,7 +69,7 @@ describe('Installer', () => {
       .mockReturnValue(Promise.resolve(binPaths.linux))
     fs.readFileSync
       .calledWith(downloadPaths.linux)
-      .mockReturnValue(new Buffer(expectedContent, "utf8"))
+      .mockReturnValue(Buffer.from(expectedContent, "utf8"))
 
     await installer.installApp(app)
 
@@ -89,7 +89,7 @@ describe('Installer', () => {
       .mockReturnValue(Promise.resolve(binPaths.win32))
     fs.readFileSync
       .calledWith(downloadPaths.win32)
-      .mockReturnValue(new Buffer(expectedContent, "utf8"))
+      .mockReturnValue(Buffer.from(expectedContent, "utf8"))
 
     await installer.installApp(app)
 
@@ -131,7 +131,7 @@ describe('Installer', () => {
       .mockReturnValue(Promise.resolve(binPaths.linux))
     fs.readFileSync
       .calledWith(downloadPaths.linux)
-      .mockReturnValue(new Buffer("unexpected content", "utf8"))
+      .mockReturnValue(Buffer.from("unexpected content", "utf8"))
 
     const result = installer.installApp(app)
 
@@ -148,7 +148,7 @@ describe('Installer', () => {
       .mockReturnValue(Promise.resolve(binPaths.win32))
     fs.readFileSync
       .calledWith(downloadPaths.win32)
-      .mockReturnValue(new Buffer("unexpected content", "utf8"))
+      .mockReturnValue(Buffer.from("unexpected content", "utf8"))
 
     const result = installer.installApp(app)
 
