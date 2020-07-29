@@ -36,7 +36,8 @@ export class Installer {
 
     // note: app.version and downloadInfo.version may be different:
     // if app.version is 'latest' then downloadInfo.version will be the concrete version
-    let binPath = this._cache.find(app.name, downloadInfo.version)
+    const binName = this._env.platform == 'win32' ? `${app.name}.exe` : app.name
+    let binPath = this._cache.find(binName, downloadInfo.version)
 
     if (!binPath) {
       this._core.info(
@@ -47,8 +48,6 @@ export class Installer {
       this.verifyChecksum(downloadPath, downloadInfo)
 
       this._fs.chmodSync(downloadPath, '755')
-      const binName =
-        this._env.platform == 'win32' ? `${app.name}.exe` : app.name
       binPath = await this._cache.cacheFile(
         downloadPath,
         binName,
