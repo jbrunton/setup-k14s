@@ -9,7 +9,7 @@ import {createOctokit} from './adapters/octokit'
 async function run(): Promise<void> {
   const octokit = createOctokit()
   const releasesService = new ReleasesService(process, core, octokit)
-  const installer = new Installer(core, cache, fs, releasesService)
+  const installer = new Installer(core, cache, fs, process, releasesService)
 
   try {
     console.time('download apps')

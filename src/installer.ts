@@ -4,6 +4,7 @@ import {ActionsToolCache} from './adapters/cache'
 import {FileSystem} from './adapters/fs'
 import {ReleasesService} from './releases_service'
 import * as crypto from 'crypto'
+import {Environment} from './adapters/environment'
 
 function describe(app: AppInfo): string {
   return `${app.name} ${app.version}`
@@ -13,26 +14,31 @@ export class Installer {
   private _core: ActionsCore
   private _cache: ActionsToolCache
   private _fs: FileSystem
+  private _env: Environment
   private _releasesService: ReleasesService
 
   constructor(
     core: ActionsCore,
     cache: ActionsToolCache,
     fs: FileSystem,
+    env: Environment,
     releasesService: ReleasesService
   ) {
     this._core = core
     this._cache = cache
     this._fs = fs
+    this._env = env
     this._releasesService = releasesService
   }
 
   async installApp(app: AppInfo): Promise<void> {
     const downloadInfo = await this._releasesService.getDownloadInfo(app)
 
+    const binName = this._env.platform == 'win32' ? `${app.name}.exe` : app.name
+
     // note: app.version and downloadInfo.version may be different:
     // if app.version is 'latest' then downloadInfo.version will be the concrete version
-    let binPath = this._cache.find(app.name, downloadInfo.version)
+    let binPath = this._cache.find(binName, downloadInfo.version)
 
     if (!binPath) {
       this._core.info(
@@ -45,8 +51,8 @@ export class Installer {
       this._fs.chmodSync(downloadPath, '755')
       binPath = await this._cache.cacheFile(
         downloadPath,
-        app.name,
-        app.name,
+        binName,
+        binName,
         downloadInfo.version
       )
     } else {

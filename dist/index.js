@@ -4610,7 +4610,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const octokit = octokit_1.createOctokit();
         const releasesService = new releases_service_1.ReleasesService(process, core_1.core, octokit);
-        const installer = new installer_1.Installer(core_1.core, cache_1.cache, fs_1.fs, releasesService);
+        const installer = new installer_1.Installer(core_1.core, cache_1.cache, fs_1.fs, process, releasesService);
         try {
             console.time('download apps');
             const apps = new inputs_1.Inputs(core_1.core, process).getAppsToDownload();
@@ -13422,24 +13422,26 @@ function describe(app) {
     return `${app.name} ${app.version}`;
 }
 class Installer {
-    constructor(core, cache, fs, releasesService) {
+    constructor(core, cache, fs, env, releasesService) {
         this._core = core;
         this._cache = cache;
         this._fs = fs;
+        this._env = env;
         this._releasesService = releasesService;
     }
     installApp(app) {
         return __awaiter(this, void 0, void 0, function* () {
             const downloadInfo = yield this._releasesService.getDownloadInfo(app);
+            const binName = this._env.platform == 'win32' ? `${app.name}.exe` : app.name;
             // note: app.version and downloadInfo.version may be different:
             // if app.version is 'latest' then downloadInfo.version will be the concrete version
-            let binPath = this._cache.find(app.name, downloadInfo.version);
+            let binPath = this._cache.find(binName, downloadInfo.version);
             if (!binPath) {
                 this._core.info(`Downloading ${app.name} ${downloadInfo.version} from ${downloadInfo.url}`);
                 const downloadPath = yield this._cache.downloadTool(downloadInfo.url);
                 this.verifyChecksum(downloadPath, downloadInfo);
                 this._fs.chmodSync(downloadPath, '755');
-                binPath = yield this._cache.cacheFile(downloadPath, app.name, app.name, downloadInfo.version);
+                binPath = yield this._cache.cacheFile(downloadPath, binName, binName, downloadInfo.version);
             }
             else {
                 this._core.info(`${app.name} ${downloadInfo.version} already in tool cache`);
