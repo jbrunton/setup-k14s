@@ -8,11 +8,17 @@ import { DownloadInfo } from '../../src/types'
 
 describe('Installer', () => {
   const app = { name: "ytt", version: "0.28.0" }
-  const downloadUrl = "example.com/ytt/0.28.0/ytt-linux-amd64"
-  const downloadPath = "/downloads/ytt-linux-amd64"
-  const binPath = "/bin/ytt"
+  const assetNameLinux = "ytt-linux-amd64"
+  const assetNameWindows = "ytt-windows-amd64.exe"
+  const downloadUrlLinux = "example.com/ytt/0.28.0/ytt-linux-amd64"
+  const downloadUrlWindows = "example.com/ytt/0.28.0/ytt-windows-amd64.exe"
+  const downloadPathLinux = "/downloads/ytt-linux-amd64"
+  const downloadPathWindows = "/downloads/ytt-windows-amd64.exe"
+  const binPathLinux = "/bin/ytt"
+  const binPathWindows = "/bin/ytt.exe"
   const expectedContent = "foo bar baz"
-  const expectedChecksum = '"dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"'
+  const expectedLinuxChecksum = '"dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"'
+  const expectedWindowsChecksum = '"dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-windows-amd64.exe"'
 
   let installer: Installer
   let core: MockProxy<ActionsCore>
@@ -22,60 +28,89 @@ describe('Installer', () => {
   beforeEach(() => {
     core = mock<ActionsCore>()
     cache = mock<ActionsToolCache>()
-    fs = mock<FileSystem>()
+    fs = mock<FileSystem>()   
+  })
+
+  function createInstaller(platform: string): Installer {
+    const env = { platform: platform }
     const releasesService = mock<ReleasesService>()
+    installer = new Installer(core, cache, fs, env, releasesService)
 
-    installer = new Installer(core, cache, fs, releasesService)
-
+    const expectedChecksum = platform == "win32" ? expectedWindowsChecksum : expectedLinuxChecksum
     const downloadInfo: DownloadInfo = {
       version: "0.28.0",
-      url: downloadUrl,
-      assetName: "ytt-linux-amd64",
+      url: platform == "win32" ? downloadUrlWindows : downloadUrlLinux,
+      assetName: platform == "win32" ? assetNameWindows : assetNameLinux,
       releaseNotes: `* some cool stuff\n${expectedChecksum}`
     }
     releasesService.getDownloadInfo
       .calledWith(app)
       .mockReturnValue(Promise.resolve(downloadInfo))
-  })
+    
+    return installer
+  }
 
   test('it installs a new app', async () => {
+    const installer = createInstaller('linux')
     cache.downloadTool
-      .calledWith(downloadUrl)
-      .mockReturnValue(Promise.resolve(downloadPath))
+      .calledWith(downloadUrlLinux)
+      .mockReturnValue(Promise.resolve(downloadPathLinux))
     cache.cacheFile
-      .calledWith(downloadPath, "ytt", "ytt", "0.28.0")
-      .mockReturnValue(Promise.resolve(binPath))
+      .calledWith(downloadPathLinux, "ytt", "ytt", "0.28.0")
+      .mockReturnValue(Promise.resolve(binPathLinux))
     fs.readFileSync
-      .calledWith(downloadPath)
+      .calledWith(downloadPathLinux)
       .mockReturnValue(new Buffer(expectedContent, "utf8"))
 
     await installer.installApp(app)
 
     expect(core.info).toHaveBeenCalledWith("Downloading ytt 0.28.0 from example.com/ytt/0.28.0/ytt-linux-amd64")
     expect(core.info).toHaveBeenCalledWith(`✅  Verified checksum: "dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-linux-amd64"`)
-    expect(fs.chmodSync).toHaveBeenCalledWith(downloadPath, "755")
-    expect(core.addPath).toHaveBeenCalledWith(binPath)
+    expect(fs.chmodSync).toHaveBeenCalledWith(downloadPathLinux, "755")
+    expect(core.addPath).toHaveBeenCalledWith(binPathLinux)
+  })
+
+  test('it installs a new app on windows', async () => {
+    const installer = createInstaller('win32')
+    cache.downloadTool
+      .calledWith(downloadUrlWindows)
+      .mockReturnValue(Promise.resolve(downloadPathWindows))
+    cache.cacheFile
+      .calledWith(downloadPathWindows, "ytt.exe", "ytt.exe", "0.28.0")
+      .mockReturnValue(Promise.resolve(binPathWindows))
+    fs.readFileSync
+      .calledWith(downloadPathWindows)
+      .mockReturnValue(new Buffer(expectedContent, "utf8"))
+
+    await installer.installApp(app)
+
+    expect(core.info).toHaveBeenCalledWith("Downloading ytt 0.28.0 from example.com/ytt/0.28.0/ytt-windows-amd64.exe")
+    expect(core.info).toHaveBeenCalledWith(`✅  Verified checksum: "dbd318c1c462aee872f41109a4dfd3048871a03dedd0fe0e757ced57dad6f2d7  ./ytt-windows-amd64.exe"`)
+    expect(fs.chmodSync).toHaveBeenCalledWith(downloadPathWindows, "755")
+    expect(core.addPath).toHaveBeenCalledWith(binPathWindows)
   })
 
   test('it adds a cached app to the path', async () => {
-    cache.find.calledWith("ytt", "0.28.0").mockReturnValue(binPath)
+    const installer = createInstaller('linux')
+    cache.find.calledWith("ytt", "0.28.0").mockReturnValue(binPathLinux)
 
     await installer.installApp(app)
 
     expect(core.info).toHaveBeenCalledWith("ytt 0.28.0 already in tool cache")
     expect(cache.downloadTool).not.toHaveBeenCalled()
-    expect(core.addPath).toHaveBeenCalledWith(binPath)
+    expect(core.addPath).toHaveBeenCalledWith(binPathLinux)
   })
 
   test('it verifies the checksum', async () => {
+    const installer = createInstaller('linux')
     cache.downloadTool
-      .calledWith(downloadUrl)
-      .mockReturnValue(Promise.resolve(downloadPath))
+      .calledWith(downloadUrlLinux)
+      .mockReturnValue(Promise.resolve(downloadPathLinux))
     cache.cacheFile
-      .calledWith(downloadPath, "ytt", "ytt", "0.28.0")
-      .mockReturnValue(Promise.resolve(binPath))
+      .calledWith(downloadPathLinux, "ytt", "ytt", "0.28.0")
+      .mockReturnValue(Promise.resolve(binPathLinux))
     fs.readFileSync
-      .calledWith(downloadPath)
+      .calledWith(downloadPathLinux)
       .mockReturnValue(new Buffer("unexpected content", "utf8"))
 
     const result = installer.installApp(app)
