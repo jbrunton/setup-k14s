@@ -15,7 +15,8 @@
     "all": "npm run build && npm run format && npm run lint && npm run pack && npm test",
     "verify:installed": "node scripts/verify_installed.js",
     "verify:not:installed": "node scripts/verify_not_installed.js",
-    "verify:version": "node scripts/verify_version.js"
+    "verify:version": "node scripts/verify_version.js",
+    "verify:output": "node scripts/verify_output.js"
   },
   "repository": {
     "type": "git",
