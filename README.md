@@ -73,9 +73,9 @@ Note: remember to run `build` and `pack` first, as the workflow will act upon th
 
 Typically, if you just want to try out the action, it's sufficient to run a single e2e test like this:
 
-    npm run build && npm run pack && act -j test-e2e-specific
+    npm run build && npm run pack && act -j test-e2e-specific-apps
 
-This will execute the test-e2e-specific job, which runs the action configured to install a couple of apps (ytt and kbld).
+This will execute the test-e2e-specific-apps job, which runs the action configured to install a couple of apps (ytt and kbld).
 
 ### Submitting PRs
 

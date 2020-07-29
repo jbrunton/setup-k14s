@@ -26,8 +26,12 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: npm run verify:installed -- ytt kbld kapp imgpkg vendir
 
-  test-e2e-specific:
-    runs-on: ubuntu-latest    
+  test-e2e-specific-apps:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: "${{ matrix.os }}" 
     steps:
     - uses: actions/checkout@v1
     - uses: ./
@@ -40,8 +44,12 @@ jobs:
         npm run verify:installed -- ytt kbld
         npm run verify:not:installed -- kapp kwt imgpkg vendir
 
-  test-e2e-version:
-    runs-on: ubuntu-latest
+  test-e2e-specific-version:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: "${{ matrix.os }}"
     steps:
     - uses: actions/checkout@v1
     - uses: ./
