@@ -56,6 +56,7 @@ export class Installer {
     }
 
     this._core.addPath(binPath)
+    this._core.info(`Added ${binPath} to path`)
   }
 
   async installAll(apps: Array<AppInfo>) {
