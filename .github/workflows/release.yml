@@ -30,7 +30,7 @@ jobs:
           
           git config --global user.email "jbrunton-ci-minion@outlook.com"
           git config --global user.name "jbrunton-ci-minion"
-          git tag -fa $MAJOR_TAG -m "Update $MAJOR_TAG tag"
+          git tag -fa $MAJOR_TAG -m "Update $MAJOR_TAG tag for release $THIS_RELEASE"
           git push origin $MAJOR_TAG --force
       
       - name: skip update
