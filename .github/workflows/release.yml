@@ -12,7 +12,7 @@ jobs:
   test_release:
     runs-on: ubuntu-latest
     steps:
-      - uses: ${{ format('jbrunton/setup-k14s@{0}', env.THIS_RELEASE) }}
+      - uses: ${{ format('jbrunton/setup-k14s@{0}', '1.2.0') }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - run: npm install
