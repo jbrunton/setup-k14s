@@ -9,21 +9,7 @@ env:
 
 jobs:
   
-  test_release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ${{ format('jbrunton/setup-k14s@{0}', '1.2.0') }}
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - run: npm install
-      - name: check all apps installed
-        run: npm run verify:installed ytt kbld kapp kwt imgpkg vendir
-      - name: check apps are usable
-        run: |
-          npm run verify:output "ytt -f ./test/e2e/ytt-example" "greeting: Hello, World"
-
   update_tag:
-    needs: test_release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
