@@ -1,14 +1,30 @@
+name: release
+
 on:
   release:
     types: [published]
     
+env:
+  THIS_RELEASE: ${{ github.event.release.name }}
+
 jobs:
+  
+  test_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: "jbrunton/setup-k14s@$THIS_RELEASE"
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm install
+      - name: check all apps installed
+        run: npm run verify:installed ytt kbld kapp kwt imgpkg vendir
+      - name: check apps are usable
+        run: |
+          npm run verify:output "ytt -f ./test/e2e/ytt-example" "greeting: Hello, World"
 
   update_tag:
-  
+    needs: test_release
     runs-on: ubuntu-latest
-    env:
-      THIS_RELEASE: ${{ github.event.release.name }}
     steps:
       - uses: actions/checkout@v2
                   
