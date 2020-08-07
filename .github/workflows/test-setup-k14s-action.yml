@@ -15,3 +15,12 @@ jobs:
     - run: |
         ytt version
         kbld version
+
+  test2:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: k14s/setup-k14s-action@v0
+    - run: |
+        ytt version
+        kbld version
