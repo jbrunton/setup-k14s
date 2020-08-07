@@ -1,0 +1,17 @@
+name: test-setup-k14s-action
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - 'releases/*'
+
+jobs:
+
+  test:
+  
+    steps:
+    - uses: k14s/setup-k14s-action@v0
+    - run: |
+        ytt version
+        kbld version
