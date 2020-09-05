@@ -1,0 +1,34 @@
+name: test-setup-k14s-action
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - 'releases/*'
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: k14s/setup-k14s-action@v1
+    - run: |
+        ytt version
+        kbld version
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.13.0' # The Go version to download (if necessary) and use.
+    - run: go version
+
+  test2:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: k14s/setup-k14s-action@v1
+    - run: |
+        ytt version
+        kbld version
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.13.1' # The Go version to download (if necessary) and use.
+    - run: go version
